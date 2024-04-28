@@ -23,10 +23,12 @@ jobs:
       - name: Run build script
         run: npm run build
 
-      - name: Semantic Release
+      - name: Set executable permissions for semantic-release
+        run: chmod +x $(which semantic-release)
+      
+      - name: Run Semantic Release
         run: npx semantic-release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
           
       - name: Check for changes
         id: git-check
