@@ -7,36 +7,40 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
-
+    
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '16'  # 使用更稳定的 Node.js 版本
-
+          node-version: '16'  # 假设您正在使用 Node.js 16
+    
       - name: Install dependencies
         run: npm install
-
+    
       - name: Run build script
         run: npm run build
-
+    
       - name: Check for changes
         id: git-check
         run: |
-          git diff --quiet || echo "::set-output name=changes_detected::true"
-      
+          if git diff --quiet; then
+            echo "No changes to commit."
+            echo "::set-output name=changes_detected::false"
+          else
+            echo "::set-output name=changes_detected::true"
+          fi
+    
       - name: Commit files
         if: steps.git-check.outputs.changes_detected == 'true'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add -f dist/
+          git add .  # Add all modified files
           git commit -m "Automated build commit"
-          if: success()
-
+          
       - name: Push changes
         if: steps.git-check.outputs.changes_detected == 'true'
         uses: ad-m/github-push-action@master
@@ -44,10 +48,3 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           force: true
           branch: ${{ github.ref }}
-
-      - name: Run Semantic Release
-        run: npx semantic-release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    
