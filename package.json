@@ -1,0 +1,16 @@
+
+{
+  "name": "your-script",
+  "version": "0.1.0",
+  "description": "A Tampermonkey script with automated version control",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "semantic-release": "^17.0.0",
+    "@semantic-release/changelog": "^5.0.0",
+    "@semantic-release/git": "^9.0.0"
+  }
+}
+    
