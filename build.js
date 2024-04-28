@@ -28,6 +28,8 @@ const metaContent = `// ==UserScript==
 // @match        https://wx.changx.com/*
 // @grant        none
 // @require      https://code.jquery.com/jquery-3.7.1.js
+// @updateURL    https://raw.githubusercontent.com/taigongzhaihua/TampermonkeyTJFZXT/blob/main/dist/your-script.meta.js
+// @downloadURL  https://raw.githubusercontent.com/taigongzhaihua/TampermonkeyTJFZXT/blob/main/dist/your-script.user.js
 // ==/UserScript==`;
 fs.writeFileSync(metaPath, metaContent);
     
