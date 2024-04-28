@@ -1,4 +1,4 @@
-const { createClient } = require("webdav");
+import { createClient } from "webdav";
 const fs = require("fs");
 
 // 从环境变量获取用户名和密码
