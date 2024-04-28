@@ -1,24 +1,33 @@
 import fs from 'fs';
 import path from 'path';
 
-// 读取版本号
-const packageJson = require('./package.json');
-const version = packageJson.version;
+// 使用动态导入读取 JSON 文件
+async function getPackageJson() {
+    const filePath = path.join(process.cwd(), 'package.json');
+    const jsonData = await fs.promises.readFile(filePath, 'utf8');
+    return JSON.parse(jsonData);
+}
 
-// 读取源脚本
-const srcPath = path.join(__dirname, 'src', 'your-script.user.js');
-const scriptContent = fs.readFileSync(srcPath, 'utf8');
+async function main() {
+    const packageJson = await getPackageJson();
+    
+    // 读取版本号
+    const version = packageJson.version;
 
-// 替换版本号
-const updatedScript = scriptContent.replace(/AUTO_INCREMENTED_VERSION/g, version);
+    // 读取源脚本
+    const srcPath = path.join(__dirname, 'src', 'your-script.user.js');
+    const scriptContent = fs.readFileSync(srcPath, 'utf8');
 
-// 写入目标脚本
-const distPath = path.join(__dirname, 'dist', 'your-script.user.js');
-fs.writeFileSync(distPath, updatedScript);
+    // 替换版本号
+    const updatedScript = scriptContent.replace(/AUTO_INCREMENTED_VERSION/g, version);
 
-// 更新 meta 文件
-const metaPath = path.join(__dirname, 'dist', 'your-script.meta.js');
-const metaContent = `// ==UserScript==
+    // 写入目标脚本
+    const distPath = path.join(__dirname, 'dist', 'your-script.user.js');
+    fs.writeFileSync(distPath, updatedScript);
+
+    // 更新 meta 文件
+    const metaPath = path.join(__dirname, 'dist', 'your-script.meta.js');
+    const metaContent = `// ==UserScript==
 // @name         体检系统辅助
 // @namespace    http://tampermonkey.net/
 // @version      ${version}
@@ -30,5 +39,9 @@ const metaContent = `// ==UserScript==
 // @updateURL    https://raw.githubusercontent.com/taigongzhaihua/TampermonkeyTJFZXT/blob/main/dist/your-script.meta.js
 // @downloadURL  https://raw.githubusercontent.com/taigongzhaihua/TampermonkeyTJFZXT/blob/main/dist/your-script.user.js
 // ==/UserScript==`;
-fs.writeFileSync(metaPath, metaContent);
-    
+    fs.writeFileSync(metaPath, metaContent);
+
+}
+
+main().catch(console.error);
+
