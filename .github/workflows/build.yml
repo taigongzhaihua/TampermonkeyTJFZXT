@@ -2,7 +2,7 @@ name: Build Script
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main ]  # 使用主分支名称
 
 jobs:
   build:
@@ -13,43 +13,39 @@ jobs:
         uses: actions/checkout@v2
     
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v3  # 使用最新版本的 setup-node
         with:
-          node-version: '21'
-
+          node-version: '16'  # 使用 Node.js 16
+    
       - name: Install dependencies
         run: npm install
     
       - name: Run build script
         run: npm run build
-      
-      - name: Run Semantic Release
-        run: npx semantic-release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}  # 确保已设置此环境变量如果需要发布到npm
-    
+          
       - name: Check for changes
         id: git-check
         run: |
-          if git diff --quiet && git diff --staged --quiet; then
+          git diff --quiet && git diff --staged --quiet
+          if [ $? -eq 0 ]; then
+            echo "No changes to commit."
             echo "::set-output name=changes_detected::false"
           else
             echo "::set-output name=changes_detected::true"
           fi
-
+    
       - name: Commit files
         if: steps.git-check.outputs.changes_detected == 'true'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add .
+          git add .  # Add all modified files
           git commit -m "Automated build commit"
           
       - name: Push changes
         if: steps.git-check.outputs.changes_detected == 'true'
-        uses: ad-m/github-push-action@v0.6.0
+        uses: ad-m/github-push-action@v0.6.0  # 使用固定版本号
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}  # 使用 GITHUB_TOKEN
           force: true
           branch: ${{ github.ref }}
