@@ -1,16 +1,35 @@
-
 {
   "name": "your-script",
   "version": "0.1.0",
   "description": "A Tampermonkey script with automated version control",
   "scripts": {
-    "build": "node build.js"
+    "build": "node build.js",
+    "semantic-release": "semantic-release"
   },
-  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/taigongzhaihua/TampermonkeyTJFZXT/tree/main/TampermonkeyTJFZXT.git"
+  },
   "devDependencies": {
-    "semantic-release": "^17.0.0",
-    "@semantic-release/changelog": "^5.0.0",
-    "@semantic-release/git": "^9.0.0"
+    "@semantic-release/changelog": "^5.0.1",
+    "@semantic-release/git": "^9.0.1",
+    "@semantic-release/npm": "^7.1.3",  
+    "semantic-release": "^17.4.7"
+  },
+  "release": {
+    "branches": ["main"],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      "@semantic-release/changelog",
+      "@semantic-release/npm",  
+      [
+        "@semantic-release/git",
+        {
+          "assets": ["package.json", "README.md", "CHANGELOG.md", "dist/**/*"],
+          "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+        }
+      ]
+    ]
   }
 }
-    
