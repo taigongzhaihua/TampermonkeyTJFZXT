@@ -4,7 +4,8 @@
   "description": "A Tampermonkey script with automated version control",
   "scripts": {
     "build": "node build.js",
-    "semantic-release": "semantic-release"
+    "semantic-release": "semantic-release",
+    "prebuild": "node increment-version.js"
   },
   "repository": {
     "type": "git",
