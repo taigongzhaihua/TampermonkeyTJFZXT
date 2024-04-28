@@ -15,7 +15,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '16'  # 假设您正在使用 Node.js 16
+          node-version: '21'  # 假设您正在使用 Node.js 16
     
       - name: Install dependencies
         run: npm install
