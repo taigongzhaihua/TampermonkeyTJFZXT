@@ -1,12 +1,11 @@
+import fs from 'fs';
+import path from 'path';
 
-const fs = require('fs');
-const path = require('path');
-const packagePath = path.join(__dirname, 'package.json');
-const package = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+const packagePath = path.join(path.resolve(), 'package.json');
+const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
 
-const versionParts = package.version.split('.');
+const versionParts = packageData.version.split('.');
 versionParts[2] = parseInt(versionParts[2]) + 1; // Increment patch number
-package.version = versionParts.join('.');
+packageData.version = versionParts.join('.');
 
-fs.writeFileSync(packagePath, JSON.stringify(package, null, 2), 'utf8');
-    
+fs.writeFileSync(packagePath, JSON.stringify(packageData, null, 2), 'utf8');
