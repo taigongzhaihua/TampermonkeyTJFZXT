@@ -1,5 +1,5 @@
 import { createClient } from "webdav";
-const fs = require("fs");
+import fs from 'fs';
 
 // 从环境变量获取用户名和密码
 const username = process.env.JIANGUO_USERNAME;

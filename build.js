@@ -1,6 +1,5 @@
-
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 // 读取版本号
 const packageJson = require('./package.json');
