@@ -4,10 +4,16 @@
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
     "@semantic-release/changelog",
+    "@semantic-release/npm",  
     {
       "path": "@semantic-release/git",
-      "assets": ["package.json", "CHANGELOG.md"],
-      "message": "chore(release): release ${nextRelease.version}"
+      "assets": [
+        "package.json",
+        "CHANGELOG.md",
+        "docs",  
+        "build"  
+      ],
+      "message": "chore(release): release ${nextRelease.version} [skip ci]" 
     }
   ]
 }
