@@ -3,7 +3,7 @@ name: Build Script
 
 on:
   push:
-    branches: [ master ]  # 触发构建的分支，这里设置为 master，可以根据需要调整
+    branches: [ main ]  # 触发构建的分支，这里设置为 master，可以根据需要调整
 
 jobs:
   build:
