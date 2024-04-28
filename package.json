@@ -13,20 +13,27 @@
   "devDependencies": {
     "@semantic-release/changelog": "^5.0.1",
     "@semantic-release/git": "^9.0.1",
-    "@semantic-release/npm": "^7.1.3",  
+    "@semantic-release/npm": "^7.1.3",
     "semantic-release": "^17.4.7"
   },
   "release": {
-    "branches": ["main"],
+    "branches": [
+      "main"
+    ],
     "plugins": [
       "@semantic-release/commit-analyzer",
       "@semantic-release/release-notes-generator",
       "@semantic-release/changelog",
-      "@semantic-release/npm",  
+      "@semantic-release/npm",
       [
         "@semantic-release/git",
         {
-          "assets": ["package.json", "README.md", "CHANGELOG.md", "dist/**/*"],
+          "assets": [
+            "package.json",
+            "README.md",
+            "CHANGELOG.md",
+            "dist/**/*"
+          ],
           "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
         }
       ]
