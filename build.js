@@ -8,26 +8,33 @@ async function getPackageJson() {
     return JSON.parse(jsonData);
 }
 
+async function getCurrentVersion(filePath) {
+    try {
+        const scriptContent = await fs.promises.readFile(filePath, 'utf8');
+        const versionMatch = scriptContent.match(/@version\s+([\d.]+)/);
+        return versionMatch ? versionMatch[1] : null;
+    } catch (error) {
+        // 如果文件不存在或读取出错，则返回 null
+        return null;
+    }
+}
+
 async function main() {
     const packageJson = await getPackageJson();
-    
-    // 读取版本号
     const version = packageJson.version;
 
-    // 读取源脚本
-    const srcPath = path.join(__dirname, 'src', 'your-script.user.js');
-    const scriptContent = fs.readFileSync(srcPath, 'utf8');
-
-    // 替换版本号
-    const updatedScript = scriptContent.replace(/AUTO_INCREMENTED_VERSION/g, version);
-
-    // 写入目标脚本
     const distPath = path.join(__dirname, 'dist', 'your-script.user.js');
-    fs.writeFileSync(distPath, updatedScript);
+    const currentVersion = await getCurrentVersion(distPath);
 
-    // 更新 meta 文件
-    const metaPath = path.join(__dirname, 'dist', 'your-script.meta.js');
-    const metaContent = `// ==UserScript==
+    // 比较版本号，如果不同则更新文件，否则不执行任何操作
+    if (version !== currentVersion) {
+        const srcPath = path.join(__dirname, 'src', 'your-script.user.js');
+        const scriptContent = fs.readFileSync(srcPath, 'utf8');
+        const updatedScript = scriptContent.replace(/AUTO_INCREMENTED_VERSION/g, version);
+        fs.writeFileSync(distPath, updatedScript);
+
+        const metaPath = path.join(__dirname, 'dist', 'your-script.meta.js');
+        const metaContent = `// ==UserScript==
 // @name         体检系统辅助
 // @namespace    http://tampermonkey.net/
 // @version      ${version}
@@ -39,8 +46,12 @@ async function main() {
 // @updateURL    https://raw.gitcode.com/qq_16077903/TampermonkeyTJFZXT/blobs/813d082b7e6f87e145eb902d87a7e6e222e6b161/your-script.meta.js
 // @downloadURL  https://raw.gitcode.com/qq_16077903/TampermonkeyTJFZXT/blobs/587c3d71df4231f77277aa60365e21f0d665d9ea/your-script.user.js
 // ==/UserScript==`;
-    fs.writeFileSync(metaPath, metaContent);
+        fs.writeFileSync(metaPath, metaContent);
 
+        console.log("Scripts updated due to version change.");
+    } else {
+        console.log("No version change detected, no update performed.");
+    }
 }
 
 main().catch(console.error);
