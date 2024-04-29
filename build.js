@@ -43,8 +43,8 @@ async function main() {
 // @match        https://wx.changx.com/*
 // @grant        none
 // @require      https://code.jquery.com/jquery-3.7.1.js
-// @updateURL    https://raw.gitcode.com/qq_16077903/TampermonkeyTJFZXT/blobs/813d082b7e6f87e145eb902d87a7e6e222e6b161/your-script.meta.js
-// @downloadURL  https://raw.gitcode.com/qq_16077903/TampermonkeyTJFZXT/blobs/587c3d71df4231f77277aa60365e21f0d665d9ea/your-script.user.js
+// @updateURL    https://raw.githubusercontent.com/taigongzhaihua/TampermonkeyTJFZXT/main/dist/your-script.meta.js
+// @downloadURL  https://raw.githubusercontent.com/taigongzhaihua/TampermonkeyTJFZXT/main/dist/your-script.user.js
 // ==/UserScript==`;
         fs.writeFileSync(metaPath, metaContent);
 
