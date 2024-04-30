@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
+import moment from 'moment'
+import { get } from 'http';
 
 // 定义文件路径
 const scriptPath = path.join(process.cwd(), 'src', 'script.user.js');
@@ -9,28 +11,34 @@ const packagePath = path.join(process.cwd(), 'package.json');
 // 读取 package.json 文件
 const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
 
+function getLastCommit() {
+    try {
+        const lastCommit = execSync(`git log -n 1 --name-only`).toString();
+        let match = lastCommit.match(/commit\s(\w+)\nAuthor:\s*(.*?)\s<(.*?)>\nDate:\s*(.*?)\n\n\s*(.*?)\n\n((.*\n)+)/);
+        const [,CommitHash, Author, Email, date, Aessage, files,] = match;
+        let Files = files.split('\n').filter(file => file !== '');
+        let Date=moment(date, 'ddd MMM DD HH:mm:ss YYYY Z').format('YYYY-MM-DD HH:mm:ss ZZ');
+        let commit = {
+            CommitHash,
+            Author,
+            Email,
+            Date,
+            Aessage,
+            Files,
+        };
+        return commit;
+    }
+    catch (error) {
+        console.error('执行 Git 命令时出错:', error);
+        return '';
+    }
+}
+
 // 使用 Git 命令检查是否有文件变化
 function hasScriptChanged() {
     try {
-        const changes = execSync(`git diff --name-only HEAD`).toString();
-        console.log('文件变化:', changes);
-        function hasFileChanged(filePath) {
-            try {
-                const changes = execSync(`git log -n 1 --stat`).toString();
-                console.log('文件变化:', changes);
-                console.log('文件变化:', changes.length);
-                return changes.length > 0;
-            } catch (error) {
-                console.error('检查文件变更时出错:', error);
-                return false;
-            }
-        }
-        
-        if (hasFileChanged('src/script.user.js')) {
-            console.log('script.user.js 文件有变更。');
-        } else {
-            console.log('script.user.js 文件无变更。');
-        }
+        const changes = getLastCommit().Files;
+        console.log(changes);
         return changes.includes(path.relative(process.cwd(), scriptPath));
     } catch (error) {
         console.error('执行 Git 命令时出错:', error);
