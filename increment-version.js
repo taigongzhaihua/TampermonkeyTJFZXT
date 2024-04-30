@@ -16,7 +16,7 @@ function hasScriptChanged() {
         console.log('文件变化:', changes);
         function hasFileChanged(filePath) {
             try {
-                const changes = execSync(`-n 1 --stat`).toString();
+                const changes = execSync(`git log -n 1 --stat`).toString();
                 console.log('文件变化:', changes);
                 console.log('文件变化:', changes.length);
                 return changes.length > 0;
