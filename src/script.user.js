@@ -131,6 +131,7 @@
         ];
         for (const item of urinalysisItems) {
             await selectDropdownOption(item, '-');
+            
         }
     }
 
