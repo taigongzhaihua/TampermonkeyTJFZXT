@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         体检系统辅助
 // @namespace    http://tampermonkey.net/
-// @version      0.1.16
+// @version      0.1.15
 // @description  监控特定元素属性的变化，并根据变化执行相应的操作。
 // @author       太公摘花
 // @match        https://wx.changx.com/*
@@ -129,7 +129,7 @@
             "尿潜血",
             "白细胞"
         ];
-        setTimeout(selectDropdownOption(performTab0Actions[1],"-"), 500);
+        selectDropdownOption(urinalysisItems[0], '-')；
     }
 
     /**
