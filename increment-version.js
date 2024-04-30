@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 // 定义文件路径
-const scriptPath = path.join(path.resolve(), 'src', 'your-script.user.js');
+const scriptPath = path.join(path.resolve(), 'src', 'script.user.js');
 const packagePath = path.join(path.resolve(), 'package.json');
 
 // 读取 package.json 文件
@@ -25,6 +25,6 @@ if (scriptStat.mtime > packageStat.mtime) {
     fs.writeFileSync(packagePath, JSON.stringify(packageData, null, 2), 'utf8');
     console.log(`Version updated to ${packageData.version}`);
 } else {
-    console.log('No changes detected in your-script.user.js');
+    console.log('No changes detected in script.user.js');
 }
 
