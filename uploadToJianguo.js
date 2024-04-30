@@ -14,19 +14,22 @@ const metaJsFilePath = "dist/script-last.meta.js";
 const remoteUserJsFilePath = "TampermonkeyTJFZXT/script-last.user.js";
 const remoteMetaJsFilePath = "TampermonkeyTJFZXT/script-last.meta.js";
 
-// 主函数
+/**
+ * 主函数，用于上传文件
+ * @returns {Promise<void>}
+ */
 async function uploadFile() {
     try {
         const localVersion = getVersion(metaJsFilePath);
-        console.log("Local version:", localVersion);
+        console.log("本地版本:", localVersion);
 
         // 从远程路径获取元数据文件的内容
         const remoteMetaData = await client.getFileContents(remoteMetaJsFilePath, { format: 'text' }).catch(err => {
-            console.error("获取远程版本号失败:", err);
-            throw err;
+            console.error("获取远程版本号失败:", err.message);
+            throw new Error("获取远程版本号失败");
         });
         const remoteVersion = getVersionFromContent(remoteMetaData);
-        console.log("Remote version:", remoteVersion);
+        console.log("远程版本:", remoteVersion);
 
         if (compareVersions(localVersion, remoteVersion) > 0) {
             await performUpload(userJsFilePath, metaJsFilePath);
@@ -34,17 +37,26 @@ async function uploadFile() {
             console.log("无需更新。本地版本与远程版本相同或更旧。");
         }
     } catch (error) {
-        console.error("上传过程中出错：", error);
+        console.error("上传过程中发生错误：", error.message);
     }
 }
 
-// 从内容中提取版本号
+/**
+ * 从字符串内容中提取版本号
+ * @param {string} content - 文件内容
+ * @returns {string|null} - 版本号或null
+ */
 function getVersionFromContent(content) {
     const versionMatch = content.match(/@version\s+([\d.]+)/);
     return versionMatch ? versionMatch[1] : null;
 }
 
-// 版本号比较函数
+/**
+ * 比较两个版本号
+ * @param {string} v1 - 版本号1
+ * @param {string} v2 - 版本号2
+ * @returns {number} - 比较结果，1表示v1大，-1表示v2大，0表示相等
+ */
 function compareVersions(v1, v2) {
     const parts1 = v1.split('.').map(Number);
     const parts2 = v2.split('.').map(Number);
@@ -60,7 +72,12 @@ function compareVersions(v1, v2) {
     return 0;
 }
 
-// 执行文件上传
+/**
+ * 执行文件上传
+ * @param {string} userFilePath - 用户脚本文件路径
+ * @param {string} metaFilePath - 元数据文件路径
+ * @returns {Promise<void>}
+ */
 async function performUpload(userFilePath, metaFilePath) {
     const userJsFileContents = fs.createReadStream(userFilePath);
     const metaJsFileContents = fs.createReadStream(metaFilePath);
@@ -69,7 +86,11 @@ async function performUpload(userFilePath, metaFilePath) {
     console.log("新版本上传成功！");
 }
 
-// 获取本地文件中的版本号
+/**
+ * 获取本地文件中的版本号
+ * @param {string} filePath - 文件路径
+ * @returns {string|null} - 版本号或null
+ */
 function getVersion(filePath) {
     const content = fs.readFileSync(filePath, 'utf8');
     return getVersionFromContent(content);
