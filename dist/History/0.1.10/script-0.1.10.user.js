@@ -1,20 +1,19 @@
 // ==UserScript==
 // @name         体检系统辅助
 // @namespace    http://tampermonkey.net/
-// @version      0.1.11
+// @version      0.1.10
 // @description  监控特定元素属性的变化，并根据变化执行相应的操作。
 // @author       太公摘花
 // @match        https://wx.changx.com/*
 // @grant        none
 // @require      https://code.jquery.com/jquery-3.7.1.js
-// @updateURL    https://raw.githubusercontent.com/taigongzhaihua/TampermonkeyTJFZXT/main/dist/script-last.meta.js
-// @downloadURL  https://raw.githubusercontent.com/taigongzhaihua/TampermonkeyTJFZXT/main/dist/script-last.user.js
+// @updateURL    https://raw.githubusercontent.com/taigongzhaihua/TampermonkeyTJFZXT/main/dist/your-script.meta.js
+// @downloadURL  https://raw.githubusercontent.com/taigongzhaihua/TampermonkeyTJFZXT/main/dist/your-script.user.js
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    let tab0Observer = null; // 标签页1的观察者对象
     let tab1Observer = null; // 标签页1的观察者对象
     let tab2Observer = null; // 标签页2的观察者对象
 
@@ -57,7 +56,6 @@
      * 启动标签页监控
      */
     function startTabMonitoring() {
-        tab0Observer = monitorElement('#tab-0', 'tabindex', performTab0Actions);
         tab1Observer = monitorElement('#tab-1', 'tabindex', performTab1Actions);
         tab2Observer = monitorElement('#tab-2', 'tabindex', performTab2Actions);
     }
@@ -66,10 +64,6 @@
      * 停止标签页监控
      */
     function stopTabMonitoring() {
-        if (tab0Observer) {
-            tab0Observer.disconnect(); // 断开连接
-            tab0Observer = null;
-        }
         if (tab1Observer) {
             tab1Observer.disconnect(); // 断开连接
             tab1Observer = null;
@@ -109,12 +103,6 @@
             setTimeout(() => monitorElement(selector, attribute, action), 500); // 如果未找到元素，500ms后再次尝试
             return null;
         }
-    }
-
-    function performTab0Actions() {
-        console.log('标签页 1 激活，执行操作...');
-        simulateClick('div#pane-1 input[type="radio"][value="1"]');
-        clickUncheckedLabel($('div#pane-1 input[type="radio"][value="4"]').first().closest('label'));
     }
 
     /**
