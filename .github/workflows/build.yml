@@ -51,7 +51,7 @@ jobs:
           branch: ${{ github.ref }}
 
       - name: Upload file to Jianguoyun
-        run: node uploadToJianguo.js
+        run: npm run upload-to-jianguoyun
         env:
           JIANGUO_USERNAME: ${{ secrets.JIANGUO_USERNAME }}
           JIANGUO_PASSWORD: ${{ secrets.JIANGUO_PASSWORD }}
