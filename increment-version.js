@@ -14,6 +14,8 @@ function hasScriptChanged() {
     try {
         const changes = execSync(`git diff --name-only HEAD`).toString();
         console.log('文件变化:', changes);
+        const changes2 = execSync('git status --porcelain').toString();
+        console.log('变更的文件和状态:', changes2);
         return changes.includes(path.relative(process.cwd(), scriptPath));
     } catch (error) {
         console.error('执行 Git 命令时出错:', error);
