@@ -12,7 +12,7 @@ const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
 // 使用 Git 命令检查是否有文件变化
 function hasScriptChanged() {
     try {
-        const changes = execSync(`git diff --name-only HEAD^ HEAD`).toString();
+        const changes = execSync(`git diff --name-only HEAD`).toString();
         return changes.includes(path.relative(process.cwd(), scriptPath));
     } catch (error) {
         console.error('执行 Git 命令时出错:', error);
