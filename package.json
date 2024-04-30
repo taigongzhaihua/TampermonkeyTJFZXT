@@ -7,7 +7,7 @@
     "build": "node build.js",
     "semantic-release": "semantic-release",
     "prebuild": "node increment-version.js",
-    "upload-to-jianguoyun": "node upload-to-jianguoyun.js"
+    "upload-to-jianguoyun": "node uploadToJianguo.js"
   },
   "repository": {
     "type": "git",
