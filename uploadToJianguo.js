@@ -1,11 +1,11 @@
 import { createClient } from "webdav";
 import fs from 'fs';
-import path from 'path';
 
 // 从环境变量获取用户名和密码
 const username = process.env.JIANGUO_USERNAME;
 const password = process.env.JIANGUO_PASSWORD;
 
+console.log("Using username:", username); // 输出用户名来确认其是否被正确读取
 // 创建 WebDAV 客户端实例
 const client = createClient(
     "https://dav.jianguoyun.com/dav/", // 坚果云的 WebDAV 服务器地址
@@ -22,6 +22,9 @@ const remoteMetaJsFilePath = "TampermonkeyTJFZXT/script-last.meta.js";
 
 // 版本号比较函数
 function compareVersions(v1, v2) {
+    if (!v1 || !v2) {
+        throw new Error("版本号缺失，无法进行比较。");
+    }
     const parts1 = v1.split('.').map(Number);
     const parts2 = v2.split('.').map(Number);
     const maxLength = Math.max(parts1.length, parts2.length);
@@ -41,7 +44,10 @@ function compareVersions(v1, v2) {
 function getVersion(filePath) {
     const content = fs.readFileSync(filePath, 'utf8');
     const versionMatch = content.match(/@version\s+([\d.]+)/);
-    return versionMatch ? versionMatch[1] : null;
+    if (!versionMatch) {
+        throw new Error(`无法从文件 ${filePath} 中读取版本号。`);
+    }
+    return versionMatch[1];
 }
 
 // 备份旧版本文件
@@ -49,13 +55,19 @@ async function backupOldVersion(version) {
     const historyPath = `TampermonkeyTJFZXT/History/${version}`;
     await client.copyFile(remoteUserJsFilePath, `${historyPath}/script-${version}.user.js`);
     await client.copyFile(remoteMetaJsFilePath, `${historyPath}/script-${version}.meta.js`);
+    console.log(`旧版本已备份到 ${historyPath}`);
 }
 
 // 上传新版本文件
 async function uploadNewVersion(userJsFileContents, metaJsFileContents) {
-    await client.putFileContents(remoteUserJsFilePath, userJsFileContents, { overwrite: true });
-    await client.putFileContents(remoteMetaJsFilePath, metaJsFileContents, { overwrite: true });
-    console.log("新版本上传成功！");
+    try {
+        await client.putFileContents(remoteUserJsFilePath, userJsFileContents, { overwrite: true });
+        await client.putFileContents(remoteMetaJsFilePath, metaJsFileContents, { overwrite: true });
+        console.log("新版本上传成功！");
+    } finally {
+        userJsFileContents.close();
+        metaJsFileContents.close();
+    }
 }
 
 // 主函数
@@ -64,12 +76,13 @@ async function uploadFile() {
         const localVersion = getVersion(metaJsFilePath);
         const remoteVersion = await client.getFileContents(remoteMetaJsFilePath, { format: 'text' })
             .then(contents => getVersion(contents))
-            .catch(() => null);
+            .catch(error => {
+                throw new Error(`获取远程版本号失败: ${error}`);
+            });
 
-        if (localVersion && compareVersions(localVersion, remoteVersion) > 0) {
+        if (compareVersions(localVersion, remoteVersion) > 0) {
             const userJsFileContents = fs.createReadStream(userJsFilePath);
             const metaJsFileContents = fs.createReadStream(metaJsFilePath);
-
             if (remoteVersion) {
                 await backupOldVersion(remoteVersion);
             }
