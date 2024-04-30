@@ -18,6 +18,7 @@ function hasScriptChanged() {
             try {
                 const changes = execSync(`git log -p -1 -- ${filePath}`).toString();
                 console.log('文件变化:', changes);
+                console.log('文件变化:', changes.length);
                 return changes.length > 0;
             } catch (error) {
                 console.error('检查文件变更时出错:', error);
