@@ -13,6 +13,7 @@ const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
 function hasScriptChanged() {
     try {
         const changes = execSync(`git diff --name-only HEAD`).toString();
+        console.log('文件变化:', changes);
         return changes.includes(path.relative(process.cwd(), scriptPath));
     } catch (error) {
         console.error('执行 Git 命令时出错:', error);
