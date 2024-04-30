@@ -1,13 +1,14 @@
 {
   "name": "your-script",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "A Tampermonkey script with automated version control",
   "type": "module",
   "scripts": {
     "build": "node build.js",
     "semantic-release": "semantic-release",
     "prebuild": "node increment-version.js",
-    "upload-to-jianguoyun": "node uploadToJianguo.js"
+    "upload-to-jianguoyun": "node uploadToJianguo.js",
+    "increment-version": "node increment-version.js"
   },
   "repository": {
     "type": "git",

@@ -20,6 +20,9 @@ jobs:
       - name: Install dependencies
         run: npm install
     
+      - name: Run increment version script
+        run: npm run increment-version
+
       - name: Run build script
         run: npm run build
           
