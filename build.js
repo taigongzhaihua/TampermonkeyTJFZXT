@@ -4,6 +4,8 @@ import { fileURLToPath } from 'url';
 
 // 获取当前文件的目录名
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const updateUrl = "https://raw.githubusercontent.com/taigongzhaihua/TampermonkeyTJFZXT/main/dist/script-last.meta.js";
+const downloadUrl = "https://raw.githubusercontent.com/taigongzhaihua/TampermonkeyTJFZXT/main/dist/script-last.user.js";
 
 /**
  * 读取package.json文件获取当前项目的版本号
@@ -61,7 +63,9 @@ async function main() {
         // 更新脚本到新版本
         const srcPath = path.join(__dirname, 'src', 'script.user.js');
         const scriptContent = await fs.promises.readFile(srcPath, 'utf8');
-        const updatedScript = scriptContent.replace(/AUTO_INCREMENTED_VERSION/g, packageVersion);
+        const updatedScript = scriptContent.replace(/AUTO_INCREMENTED_VERSION/g, packageVersion)
+            .replace(/AUTO_UPDATE_URL/g, updateUrl)
+            .replace(/AUTO_DOWNLOAD_URL/g, downloadUrl);
         await fs.promises.writeFile(distPath, updatedScript);
 
         const metaPath = path.join(__dirname, 'dist', 'script-last.meta.js');
@@ -74,8 +78,8 @@ async function main() {
 // @match        https://wx.changx.com/*
 // @grant        none
 // @require      https://code.jquery.com/jquery-3.7.1.js
-// @updateURL    https://raw.githubusercontent.com/taigongzhaihua/TampermonkeyTJFZXT/main/dist/your-script.meta.js
-// @downloadURL  https://raw.githubusercontent.com/taigongzhaihua/TampermonkeyTJFZXT/main/dist/your-script.user.js
+// @updateURL    ${updateUrl}
+// @downloadURL  ${downloadUrl}
 // ==/UserScript==`;
         await fs.promises.writeFile(metaPath, metaContent);
 

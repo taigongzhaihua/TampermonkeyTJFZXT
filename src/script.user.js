@@ -7,8 +7,8 @@
 // @match        https://wx.changx.com/*
 // @grant        none
 // @require      https://code.jquery.com/jquery-3.7.1.js
-// @updateURL    https://raw.githubusercontent.com/taigongzhaihua/TampermonkeyTJFZXT/main/dist/your-script.meta.js
-// @downloadURL  https://raw.githubusercontent.com/taigongzhaihua/TampermonkeyTJFZXT/main/dist/your-script.user.js
+// @updateURL    AUTO_UPDATE_URL
+// @downloadURL  AUTO_DOWNLOAD_URL
 // ==/UserScript==
 
 (function() {
