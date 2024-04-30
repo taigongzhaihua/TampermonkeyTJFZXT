@@ -121,7 +121,7 @@
      * 执行标签页0的相关操作
      * @returns {void} - 无返回值
      */
-    function performTab0Actions() {
+    async function performTab0Actions() {
         let urinalysisItems = [
             "尿蛋白",
             "尿糖",
@@ -130,7 +130,7 @@
             "白细胞"
         ];
         for (const item of urinalysisItems) {
-            selectDropdownOption(item, '-');
+            await selectDropdownOption(item, '-');
         }
     }
 
@@ -229,12 +229,12 @@
                     resolve($(selector));
                 }
             });
-    
+
             observer.observe(document.body, {
                 childList: true,
                 subtree: true
             });
-    
+
             // 设置超时，防止无限等待
             setTimeout(() => {
                 observer.disconnect();
