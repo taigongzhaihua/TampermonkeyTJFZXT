@@ -14,11 +14,22 @@ function hasScriptChanged() {
     try {
         const changes = execSync(`git diff --name-only HEAD`).toString();
         console.log('文件变化:', changes);
-        const changes2 = execSync('git status --porcelain').toString();
-        console.log('变更的文件和状态:', changes2);
-        const lastBuildCommitHash = '上次构建的提交哈希'; // 这里需要您提供上次构建的确切提交哈希
-        const log = execSync(`git log ${lastBuildCommitHash}..HEAD --oneline`).toString();
-        console.log('提交日志:', log);
+        function hasFileChanged(filePath) {
+            try {
+                const changes = execSync(`git log -p -1 -- ${filePath}`).toString();
+                console.log('文件变化:', changes);
+                return changes.length > 0;
+            } catch (error) {
+                console.error('检查文件变更时出错:', error);
+                return false;
+            }
+        }
+        
+        if (hasFileChanged('src/script.user.js')) {
+            console.log('script.user.js 文件有变更。');
+        } else {
+            console.log('script.user.js 文件无变更。');
+        }
         return changes.includes(path.relative(process.cwd(), scriptPath));
     } catch (error) {
         console.error('执行 Git 命令时出错:', error);
