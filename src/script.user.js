@@ -129,15 +129,7 @@
             "尿潜血",
             "白细胞"
         ];
-        selectDropdownOption(urinalysisItems[0], '-').then(() => {
-            selectDropdownOption(urinalysisItems[1], '-').then(() => {
-                selectDropdownOption(urinalysisItems[2], '-').then(() => {
-                    selectDropdownOption(urinalysisItems[3], '-').then(() => {
-                        selectDropdownOption(urinalysisItems[4], '-');
-                    });
-                });
-            });
-        });
+        selectDropdownOption(urinalysisItems[0], '-')；
     }
 
     /**
