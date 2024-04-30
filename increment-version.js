@@ -16,6 +16,9 @@ function hasScriptChanged() {
         console.log('文件变化:', changes);
         const changes2 = execSync('git status --porcelain').toString();
         console.log('变更的文件和状态:', changes2);
+        const lastBuildCommitHash = '上次构建的提交哈希'; // 这里需要您提供上次构建的确切提交哈希
+        const log = execSync(`git log ${lastBuildCommitHash}..HEAD --oneline`).toString();
+        console.log('提交日志:', log);
         return changes.includes(path.relative(process.cwd(), scriptPath));
     } catch (error) {
         console.error('执行 Git 命令时出错:', error);
