@@ -1,6 +1,6 @@
 {
   "name": "your-script",
-  "version": "0.1.23",
+  "version": "0.1.24",
   "description": "A Tampermonkey script with automated version control",
   "type": "module",
   "scripts": {

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         体检系统辅助
 // @namespace    http://tampermonkey.net/
-// @version      0.1.23
+// @version      0.1.24
 // @description  监控特定元素属性的变化，并根据变化执行相应的操作。
 // @author       太公摘花
 // @match        https://wx.changx.com/*
@@ -67,9 +67,9 @@
      * @returns {void} - 无返回值
      */
     function startTabMonitoring() {
-        tab0Observer = setupElementObserver('#tab-0', 'tabindex', "0", performTab0Actions);
-        tab1Observer = setupElementObserver('#tab-1', 'tabindex', "0", performTab1Actions);
-        tab2Observer = setupElementObserver('#tab-2', 'tabindex', "0", performTab2Actions);
+        tab0Observer = setupElementObserver('#tab-0', 'tabindex', 0, performTab0Actions);
+        tab1Observer = setupElementObserver('#tab-1', 'tabindex', 0, performTab1Actions);
+        tab2Observer = setupElementObserver('#tab-2', 'tabindex', 0, performTab2Actions);
     }
 
     /**
@@ -215,7 +215,7 @@
             }
 
 
-            if (labelDiv.find('input[value=""]').length) {
+            if (labelDiv.find('input').attr('value') === ''){
                 console.log(`正在触发 "${title}" 下拉菜单。`);
                 labelDiv.children().first().click();
             } else {
