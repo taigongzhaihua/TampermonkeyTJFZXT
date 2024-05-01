@@ -8,14 +8,14 @@ import { promisify } from 'util';
 
 const readFileAsync = promisify(fs.readFile);
 
-async function getSHAsOfCommitsInLastPush() {
+function getSHAsOfCommitsInLastPush() {
     const eventPath = process.env.GITHUB_EVENT_PATH;
     try {
-        const eventData = await readFileAsync(eventPath, 'utf8');
-        const eventJSON = await JSON.parse(eventData);
+        const eventData = readFileAsync(eventPath, 'utf8');
+        const eventJSON = JSON.parse(eventData);
 
         let SHAs = [];
-        await eventJSON.commits.forEach(commit => {
+        eventJSON.commits.forEach(commit => {
             SHAs.push(commit.id);
         });
         return SHAs;
