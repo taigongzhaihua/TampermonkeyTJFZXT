@@ -8,51 +8,21 @@ import { promisify } from 'util';
 
 const readFileAsync = promisify(fs.readFile);
 
-async function fetchPushCommits() {
+async function getSHAsOfCommitsInLastPush() {
     const eventPath = process.env.GITHUB_EVENT_PATH;
     try {
         const eventData = await readFileAsync(eventPath, 'utf8');
         const eventJSON = JSON.parse(eventData);
 
-        console.log("Commits included in this push:");
+        let SHAs = [];
         eventJSON.commits.forEach(commit => {
-            console.log(`Commit SHA: ${commit.id}`);
-            console.log(`Author: ${commit.author.name}`);
-            console.log(`Message: ${commit.message}`);
-            console.log(`URL: ${commit.url}`);
-            console.log('Files: ${commit.files}');
-            console.log('---');
+            SHAs.push(commit.id);
         });
+        return SHAs;
     } catch (error) {
         console.error('Error reading event data:', error);
     }
 }
-
-fetchPushCommits();
-async function fetchCommits() {
-    const repo = process.env.GITHUB_REPOSITORY; // 例如 'username/repo'
-    const sha = process.env.GITHUB_SHA; // 当前推送的最后一次提交 SHA
-
-    try {
-        const response = await axios.get(`https://api.github.com/repos/${repo}/commits?sha=${sha}`, {
-            headers: {
-                'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`,
-                'Accept': 'application/vnd.github.v3+json'
-            }
-        });
-
-        console.log('Commits in the push:');
-        response.data.forEach(commit => {
-            console.log(`commit: ${commit.files}`);
-            console.log(`_______________________________________________________`)
-        });
-
-    } catch (error) {
-        console.error('Error fetching commit data:', error);
-    }
-}
-
-fetchCommits();
 // 定义文件路径
 const scriptPath = path.join(process.cwd(), 'src', 'script.user.js');
 const packagePath = path.join(process.cwd(), 'package.json');
@@ -60,15 +30,16 @@ const packagePath = path.join(process.cwd(), 'package.json');
 // 读取 package.json 文件
 const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
 
-function getLastCommit() {
+function getCommitBySha(sha){
     try {
-        const lastCommit = execSync(`git log -n 1 --name-only`).toString();
-        let match = lastCommit.match(/commit\s(\w+)\nAuthor:\s*(.*?)\s<(.*?)>\nDate:\s*(.*?)\n\n\s*(.*?)\n\n((.*\n)+)/);
-        const [, CommitHash, Author, Email, date, Message, files,] = match;
+        const commitText = execSync(`git show --name-only ${sha}`).toString();
+        console.log('commitText:', JSON.parse(commitText));
+        let match = commitText.match(/commit\s(\w+)\nAuthor:\s*(.*?)\s<(.*?)>\nDate:\s*(.*?)\n\n\s*(.*?)\n\n((.*\n)+)/);
+        const [, SHA, Author, Email, date, Message, files,] = match;
         let Files = files.split('\n').filter(file => file !== '');
         let Date = moment(date, 'ddd MMM DD HH:mm:ss YYYY Z').format('YYYY-MM-DD HH:mm:ss ZZ');
         let commit = {
-            CommitHash,
+            SHA,
             Author,
             Email,
             Date,
@@ -79,16 +50,39 @@ function getLastCommit() {
     }
     catch (error) {
         console.error('执行 Git 命令时出错:', error);
-        return '';
+        return {};
+    }
+}
+function getCommitsAtLastPush(){
+    try {
+        const SHAs = getSHAsOfCommitsInLastPush();
+        let commits = [];
+        SHAs.forEach(sha => {
+            commits.push(getCommitBySha(sha));
+        });
+        console.log('最后一次推送的提交:', commits);
+        return commits;
+    }
+    catch (error) {
+        console.error('获取最后一次推送的提交时出错:', error);
+        return [];
     }
 }
 
 // 使用 Git 命令检查是否有文件变化
 function hasScriptChanged() {
     try {
-        const changes = getLastCommit().Files;
-        console.log(changes);
-        return changes.includes(path.relative(process.cwd(), scriptPath));
+        let changedFiles = [];
+        let commits = getCommitsAtLastPush();
+        commits.forEach(commit => {
+            commit.Files.forEach(file => {
+                if (!changedFiles.includes(file)) {
+                    changedFiles.push(file);
+                }
+            });
+        });
+        console.log('变化的文件:', changedFiles);
+        return changedFiles.includes(path.relative(process.cwd(), scriptPath));
     } catch (error) {
         console.error('执行 Git 命令时出错:', error);
         return false; // 如果发生错误，假设没有变化
