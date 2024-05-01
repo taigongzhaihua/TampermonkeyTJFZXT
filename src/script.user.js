@@ -129,12 +129,16 @@
             "尿潜血",
             "白细胞"
         ];
-        setTimeout(selectDropdownOption(performTab0Actions[0],"-"), 500).Promise(
-            selectDropdownOption(performTab0Actions[1],"-"),
-            selectDropdownOption(performTab0Actions[2],"-"),
-            selectDropdownOption(performTab0Actions[3],"-"),
-            selectDropdownOption(performTab0Actions[4],"-")
-        );
+        for (let i = 0; i < urinalysisItems.length; i++) {
+            // 等待每次下拉选项选择完成后再进行下一次选择
+            await selectDropdownOption(urinalysisItems[i], "-")
+                .then(result => {
+                    console.log(`成功选择 ${urinalysisItems[i]}: ${result}`);
+                })
+                .catch(error => {
+                    console.error(`在选择 ${urinalysisItems[i]} 时发生错误: ${error.message}`);
+                });
+        }
     }
 
     /**
@@ -187,19 +191,18 @@
      * @param {string} option - 要点击的选项
      * @returns {void} - 无返回值
      */
-    async function selectDropdownOption(title, option) {
-        try {
-            // 触发下拉菜单
-            const labelDiv = $(`div.el-form-item__content:contains(${title})`);
-            if (labelDiv.length > 0) {
-                labelDiv.children().first().click(); // 点击第一个子元素以触发下拉
-                console.log(`已触发"${title}"下拉菜单。`);
-
-                // 等待下拉菜单元素出现
-                const placementDiv = await waitForElement('div[x-placement="bottom-start"]');
-                console.log(`"${title}"下拉菜单已出现。`);
-
-                // 执行需要的操作，只点击文本完全等于 option 的li元素
+    function selectDropdownOption(title, option) {
+        return waitForElement(`div.el-form-item__content:contains('${title}')`)
+            .then(labelDiv => {// 等待元素出现
+                if (labelDiv.length > 0) {
+                    labelDiv.children().first().click(); // 触发下拉菜单
+                    console.log(`已触发"${title}"下拉菜单。`);
+                    return waitForElement('div[x-placement="bottom-start"]');
+                } else {
+                    throw new Error(`未找到标题为"${title}"的元素。`);
+                }
+            })
+            .then(placementDiv => {// 等待下拉菜单元素出现
                 const listItem = placementDiv.find('li.el-select-dropdown__item').filter(function () {
                     return $.trim($(this).text()) === option;
                 });
@@ -207,16 +210,17 @@
                 if (listItem.length > 0) {
                     listItem.click();
                     console.log(`已选择"${option}"。`);
+                    resolve(true);
                 } else {
-                    console.log(`未找到文本为"${option}"的选项。`);
+                    throw new Error(`未找到文本为"${option}"的选项。`);
                 }
-            } else {
-                console.log(`未找到标题为"${title}"的元素。`);
-            }
-        } catch (error) {
-            console.error("错误:", error.message);
-        }
+            })
+            .catch(error => {// 捕获错误
+                console.error("错误:", error.message);
+                throw error; // 将错误向上抛出，以便可以外部可以捕获
+            });
     }
+
 
     /**
      * 等待元素出现
@@ -226,23 +230,29 @@
      */
     function waitForElement(selector, timeout = 30000) {
         return new Promise((resolve, reject) => {
-            const observer = new MutationObserver(mutations => {
-                if ($(selector).length) {
+            const observer = new MutationObserver((mutations) => {
+                const elements = $(selector);
+                if (elements.length > 0) {
                     observer.disconnect();
-                    resolve($(selector));
+                    resolve(elements);
                 }
             });
 
-            observer.observe(document.body, {
-                childList: true,
-                subtree: true
-            });
+            observer.observe(document.body, { childList: true, subtree: true });
 
-            // 设置超时，防止无限等待
-            setTimeout(() => {
+            // 设置超时以防止无限等待
+            const timeoutId = setTimeout(() => {
                 observer.disconnect();
-                reject(new Error('Timeout waiting for element ' + selector));
+                reject(new Error(`Timeout waiting for element: ${selector}`));
             }, timeout);
+
+            // 确保在成功后清除超时定时器
+            observer.disconnect = ((disconnectOriginal) => {
+                return () => {
+                    clearTimeout(timeoutId);
+                    disconnectOriginal.call(observer);
+                };
+            })(observer.disconnect);
         });
     }
 
