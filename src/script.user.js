@@ -67,9 +67,9 @@
      * @returns {void} - 无返回值
      */
     function startTabMonitoring() {
-        tab0Observer = setupElementObserver('#tab-0', 'tabindex', "0", performTab0Actions);
-        tab1Observer = setupElementObserver('#tab-1', 'tabindex', "0", performTab1Actions);
-        tab2Observer = setupElementObserver('#tab-2', 'tabindex', "0", performTab2Actions);
+        tab0Observer = setupElementObserver('#tab-0', 'tabindex', 0, performTab0Actions);
+        tab1Observer = setupElementObserver('#tab-1', 'tabindex', 0, performTab1Actions);
+        tab2Observer = setupElementObserver('#tab-2', 'tabindex', 0, performTab2Actions);
     }
 
     /**
@@ -215,7 +215,7 @@
             }
 
 
-            if (labelDiv.find('input[value=""]').length) {
+            if (labelDiv.find('input').attr('value') === ''){
                 console.log(`正在触发 "${title}" 下拉菜单。`);
                 labelDiv.children().first().click();
             } else {
