@@ -12,10 +12,10 @@ async function getSHAsOfCommitsInLastPush() {
     const eventPath = process.env.GITHUB_EVENT_PATH;
     try {
         const eventData = await readFileAsync(eventPath, 'utf8');
-        const eventJSON = JSON.parse(eventData);
+        const eventJSON = await JSON.parse(eventData);
 
         let SHAs = [];
-        eventJSON.commits.forEach(commit => {
+        await eventJSON.commits.forEach(commit => {
             SHAs.push(commit.id);
         });
         return SHAs;
