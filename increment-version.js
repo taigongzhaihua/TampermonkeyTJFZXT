@@ -8,10 +8,10 @@ import { promisify } from 'util';
 
 const readFileAsync = promisify(fs.readFile);
 
-function getSHAsOfCommitsInLastPush() {
+async function getSHAsOfCommitsInLastPush() {
     const eventPath = process.env.GITHUB_EVENT_PATH;
     try {
-        const eventData = readFileAsync(eventPath, 'utf8');
+        const eventData = await readFileAsync(eventPath, 'utf8');
         const eventJSON = JSON.parse(eventData);
 
         let SHAs = [];
@@ -30,7 +30,7 @@ const packagePath = path.join(process.cwd(), 'package.json');
 // 读取 package.json 文件
 const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
 
-function getCommitBySha(sha){
+function getCommitBySha(sha) {
     try {
         const commitText = execSync(`git show --name-only ${sha}`).toString();
         console.log('commitText:', JSON.parse(commitText));
@@ -53,16 +53,19 @@ function getCommitBySha(sha){
         return {};
     }
 }
-function getCommitsAtLastPush(){
+function getCommitsAtLastPush() {
     try {
-        const SHAs = getSHAsOfCommitsInLastPush();
-        console.log('SHAs:', SHAs);
         let commits = [];
-        SHAs.forEach(sha => {
-            commits.push(getCommitBySha(sha));
+        getSHAsOfCommitsInLastPush().then(SHAs => {
+            console.log('SHAs:', SHAs);
+
+            SHAs.forEach(sha => {
+                commits.push(getCommitBySha(sha));
+            });
+            console.log('最后一次推送的提交:', commits);
         });
-        console.log('最后一次推送的提交:', commits);
         return commits;
+
     }
     catch (error) {
         console.error('获取最后一次推送的提交时出错:', error);
