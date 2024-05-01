@@ -24,6 +24,8 @@ jobs:
 
       - name: Run build script
         run: npm run build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Check for changes
         id: git-check
