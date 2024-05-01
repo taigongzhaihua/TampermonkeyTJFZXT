@@ -4,7 +4,30 @@ import { execSync } from 'child_process';
 import moment from 'moment'
 import axios from 'axios';
 import { get } from 'http';
+import { promisify } from 'util';
 
+const readFileAsync = promisify(fs.readFile);
+
+async function fetchPushCommits() {
+    const eventPath = process.env.GITHUB_EVENT_PATH;
+    try {
+        const eventData = await readFileAsync(eventPath, 'utf8');
+        const eventJSON = JSON.parse(eventData);
+
+        console.log("Commits included in this push:");
+        eventJSON.commits.forEach(commit => {
+            console.log(`Commit SHA: ${commit.id}`);
+            console.log(`Author: ${commit.author.name}`);
+            console.log(`Message: ${commit.message}`);
+            console.log(`URL: ${commit.url}`);
+            console.log('---');
+        });
+    } catch (error) {
+        console.error('Error reading event data:', error);
+    }
+}
+
+fetchPushCommits();
 async function fetchCommits() {
     const repo = process.env.GITHUB_REPOSITORY; // 例如 'username/repo'
     const sha = process.env.GITHUB_SHA; // 当前推送的最后一次提交 SHA
@@ -19,7 +42,7 @@ async function fetchCommits() {
 
         console.log('Commits in the push:');
         response.data.forEach(commit => {
-            console.log(`commit: ${commit.toString()}`)
+            console.log(`commit: ${commit.config}`);
             console.log(`_______________________________________________________`)
         });
 
