@@ -18,8 +18,6 @@
     let tab1Observer = null; // 标签页1的观察者对象
     let tab2Observer = null; // 标签页2的观察者对象
 
-
-
     // 监控对话框的显示与隐藏状态
     $(document).ready(() => {
         monitorDialog('.el-dialog__wrapper.page-dialog.all-test-dialog');
@@ -27,6 +25,7 @@
 
     /**
      * 监控对话框的显示与隐藏状态
+     * 
      * @param {string} selector - jQuery选择器，用于定位需要监控的元素
      * @returns {void} - 无返回值
      */
@@ -59,6 +58,7 @@
 
     /**
      * 启动标签页监控
+     * 
      * @returns {void} - 无返回值
      */
     function startTabMonitoring() {
@@ -69,6 +69,7 @@
 
     /**
      * 停止标签页监控
+     * 
      * @returns {void} - 无返回值
      */
     function stopTabMonitoring() {
@@ -88,6 +89,7 @@
 
     /**
      * 监控单个元素属性变化
+     * 
      * @param {string} selector - jQuery选择器，用于定位需要监控的元素
      * @param {string} attribute - 监控的属性
      * @param {Function} action - 当属性变化符合条件时执行的操作
@@ -119,6 +121,7 @@
 
     /**
      * 执行标签页0的相关操作
+     * 
      * @returns {void} - 无返回值
      */
     async function performTab0Actions() {
@@ -143,6 +146,7 @@
 
     /**
      * 执行标签页1的相关操作
+     * 
      * @returns {void} - 无返回值
      */
     function performTab1Actions() {
@@ -153,6 +157,7 @@
 
     /**
      * 执行标签页2的相关操作
+     * 
      * @returns {void} - 无返回值
      */
     function performTab2Actions() {
@@ -162,6 +167,7 @@
 
     /**
      * 模拟点击指定选择器的每一个元素
+     * 
      * @param {string} selector - jQuery选择器，指定需要模拟点击的元素
      * @returns {void} - 无返回值
      */
@@ -174,6 +180,7 @@
 
     /**
      * 点击未被选中的标签
+     * 
      * @param {jQuery} label - jQuery对象，表示需要点击的标签
      * @returns {void} - 无返回值
      */
@@ -186,39 +193,59 @@
     }
 
     /**
-     * 模拟点击指定下拉框标签的指定选项
+     * 定义一个异步函数 selectDropdownOption，
+     * 用于模拟点击指定下拉框标签的指定选项。
+     * 
+     * @async
      * @param {string} title - 标签名
      * @param {string} option - 要点击的选项
      * @returns {void} - 无返回值
      */
-    function selectDropdownOption(title, option) {
-        return waitForElement(`div.el-form-item__content:contains('${title}')`)
-            .then(labelDiv => {// 等待元素出现
-                if (labelDiv.length > 0) {
-                    labelDiv.children().first().click(); // 触发下拉菜单
-                    console.log(`已触发"${title}"下拉菜单。`);
-                    return waitForElement('div[x-placement="bottom-start"]');
-                } else {
-                    throw new Error(`未找到标题为"${title}"的元素。`);
-                }
-            })
-            .then(placementDiv => {// 等待下拉菜单元素出现
-                const listItem = placementDiv.find('li.el-select-dropdown__item').filter(function () {
-                    return $.trim($(this).text()) === option;
-                });
+    async function selectDropdownOption(title, option) {
+        // 检查 title 和 option 是否是字符串，如果不是，抛出错误
+        if (typeof title !== 'string' || typeof option !== 'string') {
+            throw new Error('标题和选项参数必须是字符串。');
+        }
 
-                if (listItem.length > 0) {
-                    listItem.click();
-                    console.log(`已选择"${option}"。`);
-                    return Promise.resolve(true);
-                } else {
-                    throw new Error(`未找到文本为"${option}"的选项。`);
-                }
-            })
-            .catch(error => {// 捕获错误
-                console.error("错误:", error.message);
-                throw error; // 将错误向上抛出，以便可以外部可以捕获
+        try {
+            console.log(`正在查找标题为 "${title}" 的元素。`);
+            const labelDiv = await waitForElement(`div.el-form-item__content:contains('${title}')`);
+
+            // 如果没有找到元素，抛出错误
+            if (labelDiv.length === 0) {
+                throw new Error(`未找到标题为"${title}"的元素。`);
+            }
+
+            
+            if(labelDiv.find('input[value=""]').length) {
+                console.log(`正在触发 "${title}" 下拉菜单。`);
+            labelDiv.children().first().click();
+            } else {
+                console.log(`"${title}" 下拉框已存在值，跳过当前操作。`);
+                return;
+            }
+
+            console.log(`正在等待 "${title}" 下拉菜单选项出现。`);
+            const placementDiv = await waitForElement('div[x-placement="bottom-start"]');
+            const listItem = placementDiv.find('li.el-select-dropdown__item').filter(function () {
+                // 忽略空格和大小写，查找匹配的选项
+                return $.trim($(this).text()).toLowerCase() === option.trim().toLowerCase();
             });
+
+            // 如果没有找到选项，抛出错误
+            if (listItem.length === 0) {
+                throw new Error(`未找到文本为"${option}"的选项。`);
+            }
+
+            console.log(`已选择 "${option}"。`);
+            listItem.click();
+
+            // 返回成功的结果
+            return { success: true, message: `选项 "${option}" 已成功选择。` };
+        } catch (error) {
+            console.error("错误:", error.message);
+            throw error; // 将错误向上抛出，以便外部可以捕获
+        }
     }
 
 
@@ -230,10 +257,20 @@
      */
     function waitForElement(selector, timeout = 30000) {
         return new Promise((resolve, reject) => {
+            // 先检查元素是否已存在
+            const existingElements = $(selector);
+            if (existingElements.length > 0) {
+                console.log(`元素已存在: ${selector}`);
+                resolve(existingElements);
+                return;
+            }
+
+            // 使用 MutationObserver 监听后续变化
             const observer = new MutationObserver((mutations) => {
                 const elements = $(selector);
                 if (elements.length > 0) {
                     observer.disconnect();
+                    console.log(`已找到元素: ${selector}`);
                     resolve(elements);
                 }
             });
@@ -255,5 +292,6 @@
             })(observer.disconnect);
         });
     }
+
 
 })();
