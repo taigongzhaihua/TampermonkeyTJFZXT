@@ -227,7 +227,7 @@
             const placementDiv = await waitForElement('div[x-placement="bottom-start"]');
             const listItem = placementDiv.find('li.el-select-dropdown__item').filter(function () {
                 // 忽略空格和大小写，查找匹配的选项
-                return $.trim($(this).text()).toLowerCase() === option.trim().toLowerCase();
+                return $.trim($(this).text()) === option;
             });
 
             // 如果没有找到选项，抛出错误
