@@ -33,7 +33,6 @@ const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
 function getCommitBySha(sha) {
     try {
         const commitText = execSync(`git show --name-only ${sha}`).toString();
-        console.log('commitText:', JSON.parse(commitText));
         let match = commitText.match(/commit\s(\w+)\nAuthor:\s*(.*?)\s<(.*?)>\nDate:\s*(.*?)\n\n\s*(.*?)\n\n((.*\n)+)/);
         const [, SHA, Author, Email, date, Message, files,] = match;
         let Files = files.split('\n').filter(file => file !== '');
