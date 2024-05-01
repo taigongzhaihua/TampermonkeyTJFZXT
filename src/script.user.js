@@ -210,7 +210,7 @@
                 if (listItem.length > 0) {
                     listItem.click();
                     console.log(`已选择"${option}"。`);
-                    resolve(true);
+                    return Promise.resolve(true);
                 } else {
                     throw new Error(`未找到文本为"${option}"的选项。`);
                 }
