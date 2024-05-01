@@ -6,8 +6,21 @@ import axios from 'axios';
 import { get } from 'http';
 import { promisify } from 'util';
 
+// 定义文件路径
+const scriptPath = path.join(process.cwd(), 'src', 'script.user.js');
+const packagePath = path.join(process.cwd(), 'package.json');
+
+// 读取 package.json 文件
+const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+
+// 将 fs.readFile 方法转换为 Promise 风格
 const readFileAsync = promisify(fs.readFile);
 
+/**
+ * 获取最后一次推送的提交的 SHA 值
+ * @returns {Promise<string[]>} - 包含最后一次推送的提交的 SHA 值的数组
+ * @throws {Error} - 如果读取事件数据时发生错误，则抛出异常
+ */
 async function getSHAsOfCommitsInLastPush() {
     const eventPath = process.env.GITHUB_EVENT_PATH;
     try {
@@ -23,13 +36,13 @@ async function getSHAsOfCommitsInLastPush() {
         console.error('Error reading event data:', error);
     }
 }
-// 定义文件路径
-const scriptPath = path.join(process.cwd(), 'src', 'script.user.js');
-const packagePath = path.join(process.cwd(), 'package.json');
 
-// 读取 package.json 文件
-const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
-
+/**
+ * 根据 SHA 值获取提交信息
+ * @param {string} sha - 提交的 SHA 值
+ * @returns {Object} - 包含提交信息的对象
+ * @throws {Error} - 如果执行 Git 命令时发生错误，则抛出异常
+ */
 function getCommitBySha(sha) {
     try {
         const commitText = execSync(`git show --name-only ${sha}`).toString();
@@ -37,14 +50,7 @@ function getCommitBySha(sha) {
         const [, SHA, Author, Email, date, Message, files,] = match;
         let Files = files.split('\n').filter(file => file !== '');
         let Date = moment(date, 'ddd MMM DD HH:mm:ss YYYY Z').format('YYYY-MM-DD HH:mm:ss ZZ');
-        let commit = {
-            SHA,
-            Author,
-            Email,
-            Date,
-            Message,
-            Files,
-        };
+        let commit = {SHA,Author,Email,Date,Message,Files};
         return commit;
     }
     catch (error) {
@@ -52,6 +58,12 @@ function getCommitBySha(sha) {
         return {};
     }
 }
+
+/**
+ * 获取最后一次推送的提交
+ * @returns {Promise<Object[]>} - 包含最后一次推送的提交信息的数组
+ * @throws {Error} - 如果执行 Git 命令时发生错误，则抛出异常
+ */
 function getCommitsAtLastPush() {
     try {
 
@@ -72,7 +84,12 @@ function getCommitsAtLastPush() {
     }
 }
 
-// 使用 Git 命令检查是否有文件变化
+/**
+ * 检查 script.user.js 是否发生更改
+ * @param {string} path - 要检查的文件的路径
+ * @returns {Promise<boolean>} - 如果文件发生更改，则为 true；否则为 false
+ * @throws {Error} - 如果执行 Git 命令时发生错误，则抛出异常
+ */
 function hasScriptChanged(path) {
     try {
         return getCommitsAtLastPush().then(commits => {
@@ -93,8 +110,11 @@ function hasScriptChanged(path) {
     }
 }
 
+/**
+ * 更新版本号
+ * @returns {Promise<void>} - 无返回值
+ */
 async function updateVersion() {
-    
     if (await hasScriptChanged(path.relative(process.cwd(), scriptPath))) {
         const versionParts = packageData.version.split('.');
         versionParts[2] = parseInt(versionParts[2]) + 1; // 版本号增加
