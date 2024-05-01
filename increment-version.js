@@ -20,6 +20,7 @@ async function fetchPushCommits() {
             console.log(`Author: ${commit.author.name}`);
             console.log(`Message: ${commit.message}`);
             console.log(`URL: ${commit.url}`);
+            console.log('Files: ${commit.files}');
             console.log('---');
         });
     } catch (error) {
@@ -42,7 +43,7 @@ async function fetchCommits() {
 
         console.log('Commits in the push:');
         response.data.forEach(commit => {
-            console.log(`commit: ${parseJSON(commit)}`);
+            console.log(`commit: ${commit.files}`);
             console.log(`_______________________________________________________`)
         });
 
