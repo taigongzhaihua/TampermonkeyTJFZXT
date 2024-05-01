@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         体检系统辅助
 // @namespace    http://tampermonkey.net/
-// @version      0.1.19
+// @version      0.1.20
 // @description  监控特定元素属性的变化，并根据变化执行相应的操作。
 // @author       太公摘花
 // @match        https://wx.changx.com/*
@@ -216,10 +216,10 @@
                 throw new Error(`未找到标题为"${title}"的元素。`);
             }
 
-            
-            if(labelDiv.find('input[value=""]').length) {
+
+            if (labelDiv.find('input[value=""]').length) {
                 console.log(`正在触发 "${title}" 下拉菜单。`);
-            labelDiv.children().first().click();
+                labelDiv.children().first().click();
             } else {
                 console.log(`"${title}" 下拉框已存在值，跳过当前操作。`);
                 return;
@@ -256,8 +256,12 @@
      * @returns {Promise<jQuery>} - 返回一个Promise对象，包含一个jQuery对象
      */
     function waitForElement(selector, timeout = 30000) {
+        if (typeof selector !== 'string' || selector.length === 0) {
+            throw new Error('选择器参数必须是一个非空字符串。');
+        }
+
         return new Promise((resolve, reject) => {
-            // 先检查元素是否已存在
+            // 首先检查元素是否已存在
             const existingElements = $(selector);
             if (existingElements.length > 0) {
                 console.log(`元素已存在: ${selector}`);
@@ -265,31 +269,24 @@
                 return;
             }
 
-            // 使用 MutationObserver 监听后续变化
+            // 设置 MutationObserver 来观察后续的 DOM 变化
             const observer = new MutationObserver((mutations) => {
                 const elements = $(selector);
                 if (elements.length > 0) {
-                    observer.disconnect();
                     console.log(`已找到元素: ${selector}`);
+                    observer.disconnect();  // 找到元素后断开观察
                     resolve(elements);
                 }
             });
 
             observer.observe(document.body, { childList: true, subtree: true });
 
-            // 设置超时以防止无限等待
+            // 设置超时处理
             const timeoutId = setTimeout(() => {
-                observer.disconnect();
+                console.log(`等待元素超时: ${selector}`);
+                observer.disconnect();  // 超时后断开观察
                 reject(new Error(`Timeout waiting for element: ${selector}`));
             }, timeout);
-
-            // 确保在成功后清除超时定时器
-            observer.disconnect = ((disconnectOriginal) => {
-                return () => {
-                    clearTimeout(timeoutId);
-                    disconnectOriginal.call(observer);
-                };
-            })(observer.disconnect);
         });
     }
 
