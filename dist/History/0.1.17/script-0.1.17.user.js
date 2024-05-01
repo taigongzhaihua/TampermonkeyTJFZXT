@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         体检系统辅助
 // @namespace    http://tampermonkey.net/
-// @version      0.1.18
+// @version      0.1.17
 // @description  监控特定元素属性的变化，并根据变化执行相应的操作。
 // @author       太公摘花
 // @match        https://wx.changx.com/*
@@ -210,7 +210,7 @@
                 if (listItem.length > 0) {
                     listItem.click();
                     console.log(`已选择"${option}"。`);
-                    return Promise.resolve(true);
+                    resolve(true);
                 } else {
                     throw new Error(`未找到文本为"${option}"的选项。`);
                 }
