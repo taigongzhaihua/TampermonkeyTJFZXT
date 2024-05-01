@@ -19,7 +19,7 @@ async function fetchCommits() {
 
         console.log('Commits in the push:');
         response.data.forEach(commit => {
-            console.log(`commit: ${commit}`)
+            console.log(`commit: ${commit.toString()}`)
             console.log(`_______________________________________________________`)
         });
 
