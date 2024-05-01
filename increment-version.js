@@ -54,7 +54,7 @@ function getCommitBySha(sha) {
 }
 function getCommitsAtLastPush() {
     try {
-        
+
         return getSHAsOfCommitsInLastPush().then(SHAs => {
             let commits = [];
             console.log('SHAs:', SHAs);
@@ -75,17 +75,18 @@ function getCommitsAtLastPush() {
 // 使用 Git 命令检查是否有文件变化
 function hasScriptChanged(path) {
     try {
-        let changedFiles = [];
-        let commits = getCommitsAtLastPush();
-        commits.forEach(commit => {
-            commit.Files.forEach(file => {
-                if (!changedFiles.includes(file)) {
-                    changedFiles.push(file);
-                }
+        return getCommitsAtLastPush().then(commits => {
+            let changedFiles = [];
+            commits.forEach(commit => {
+                commit.Files.forEach(file => {
+                    if (!changedFiles.includes(file)) {
+                        changedFiles.push(file);
+                    }
+                });
             });
+            console.log('变化的文件:', changedFiles);
+            return changedFiles.includes(path);
         });
-        console.log('变化的文件:', changedFiles);
-        return changedFiles.includes(path);
     } catch (error) {
         console.error('执行 Git 命令时出错:', error);
         return false; // 如果发生错误，假设没有变化
@@ -93,7 +94,8 @@ function hasScriptChanged(path) {
 }
 
 async function updateVersion() {
-    if (hasScriptChanged(path.relative(process.cwd(), scriptPath))) {
+    
+    if (await hasScriptChanged(path.relative(process.cwd(), scriptPath))) {
         const versionParts = packageData.version.split('.');
         versionParts[2] = parseInt(versionParts[2]) + 1; // 版本号增加
         packageData.version = versionParts.join('.');
