@@ -56,6 +56,7 @@ function getCommitBySha(sha){
 function getCommitsAtLastPush(){
     try {
         const SHAs = getSHAsOfCommitsInLastPush();
+        console.log('SHAs:', SHAs);
         let commits = [];
         SHAs.forEach(sha => {
             commits.push(getCommitBySha(sha));
