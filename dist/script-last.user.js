@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         体检系统辅助
 // @namespace    http://tampermonkey.net/
-// @version      0.1.20
+// @version      0.1.21
 // @description  监控特定元素属性的变化，并根据变化执行相应的操作。
 // @author       太公摘花
 // @match        https://wx.changx.com/*
@@ -35,24 +35,29 @@
             attributeFilter: ['style'] // 只监控style属性
         };
 
-        const elementFound = $(selector);
-        if (elementFound.length) {
+        setupObserver(selector, observerConfig, (element) => {
+            const display = element.css('display');
+            if (display !== 'none') {
+                console.log('对话框显示，启动标签页监控...');
+                startTabMonitoring();
+            } else {
+                console.log('对话框隐藏，断开标签页监控...');
+                stopTabMonitoring();
+            }
+        });
+    }
+
+    function setupObserver(selector, config, callback) {
+        const element = $(selector);
+        if (element.length) {
             const observer = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                    const displayStyle = $(mutation.target).css('display');
-                    if (displayStyle !== 'none') {
-                        console.log('对话框显示，启动标签页监控...');
-                        startTabMonitoring();
-                    } else if (displayStyle === 'none') {
-                        console.log('对话框隐藏，断开标签页监控...');
-                        stopTabMonitoring();
-                    }
-                });
+                mutations.forEach((mutation) => callback($(mutation.target)));
             });
 
-            observer.observe(elementFound[0], observerConfig);
+            observer.observe(element[0], config);
+            return observer;
         } else {
-            setTimeout(() => monitorDialog(selector), 500); // 如果未找到元素，500ms后再次尝试
+            setTimeout(() => setupObserver(selector, config, callback), 500);
         }
     }
 
@@ -62,9 +67,9 @@
      * @returns {void} - 无返回值
      */
     function startTabMonitoring() {
-        tab0Observer = monitorElement('#tab-0', 'tabindex', performTab0Actions);
-        tab1Observer = monitorElement('#tab-1', 'tabindex', performTab1Actions);
-        tab2Observer = monitorElement('#tab-2', 'tabindex', performTab2Actions);
+        tab0Observer = setupElementObserver('#tab-0', 'tabindex', "0", performTab0Actions);
+        tab1Observer = setupElementObserver('#tab-1', 'tabindex', "0", performTab1Actions);
+        tab2Observer = setupElementObserver('#tab-2', 'tabindex', "0", performTab2Actions);
     }
 
     /**
@@ -95,28 +100,24 @@
      * @param {Function} action - 当属性变化符合条件时执行的操作
      * @returns {MutationObserver|null} 返回创建的MutationObserver对象或null
      */
-    function monitorElement(selector, attribute, action) {
-        const observerConfig = {
+    async function setupElementObserver(selector, attribute, value, action) {
+        if (typeof selector !== 'string' || selector.length === 0) {
+            throw new Error('选择器参数必须是一个非空字符串。');
+        }
+
+        const element = await waitForElement(selector);
+        if (element.attr(attribute) === value) {
+            action();
+        }
+
+        return setupObserver(selector, {
             attributes: true,
             attributeFilter: [attribute]
-        };
-
-        const elementFound = $(selector);
-        if (elementFound.length) {
-            const observer = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                    if ($(mutation.target).attr(attribute) === '0') {
-                        action(); // 当属性变为'0'时执行操作
-                    }
-                });
-            });
-
-            observer.observe(elementFound[0], observerConfig);
-            return observer;
-        } else {
-            setTimeout(() => monitorElement(selector, attribute, action), 500); // 如果未找到元素，500ms后再次尝试
-            return null;
-        }
+        }, (element) => {
+            if (element.attr(attribute) === value) {
+                action();
+            }
+        });
     }
 
     /**
@@ -132,15 +133,14 @@
             "尿潜血",
             "白细胞"
         ];
-        for (let i = 0; i < urinalysisItems.length; i++) {
-            // 等待每次下拉选项选择完成后再进行下一次选择
-            await selectDropdownOption(urinalysisItems[i], "-")
-                .then(result => {
-                    console.log(`成功选择 ${urinalysisItems[i]}: ${result}`);
-                })
-                .catch(error => {
-                    console.error(`在选择 ${urinalysisItems[i]} 时发生错误: ${error.message}`);
-                });
+
+        for (let item of urinalysisItems) {
+            try {
+                let result = await selectDropdownOption(item, "-");
+                console.log(`成功选择 ${item}: ${result}`);
+            } catch (error) {
+                console.error(`在选择 ${item} 时发生错误: ${error.message}`);
+            }
         }
     }
 
@@ -266,7 +266,6 @@
             if (existingElements.length > 0) {
                 console.log(`元素已存在: ${selector}`);
                 resolve(existingElements);
-                return;
             }
 
             // 设置 MutationObserver 来观察后续的 DOM 变化
@@ -274,7 +273,7 @@
                 const elements = $(selector);
                 if (elements.length > 0) {
                     console.log(`已找到元素: ${selector}`);
-                    observer.disconnect();  // 找到元素后断开观察
+                    observer.disconnect(); // 找到元素后断开观察
                     resolve(elements);
                 }
             });
@@ -282,7 +281,7 @@
             observer.observe(document.body, { childList: true, subtree: true });
 
             // 设置超时处理
-            const timeoutId = setTimeout(() => {
+            setTimeout(() => {
                 console.log(`等待元素超时: ${selector}`);
                 observer.disconnect();  // 超时后断开观察
                 reject(new Error(`Timeout waiting for element: ${selector}`));
