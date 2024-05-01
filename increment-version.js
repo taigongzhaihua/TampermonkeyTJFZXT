@@ -1,5 +1,5 @@
 import fs from 'fs';
-import path from 'path';
+import path, { parse } from 'path';
 import { execSync } from 'child_process';
 import moment from 'moment'
 import axios from 'axios';
@@ -42,7 +42,7 @@ async function fetchCommits() {
 
         console.log('Commits in the push:');
         response.data.forEach(commit => {
-            console.log(`commit: ${commit.config}`);
+            console.log(`commit: ${parseJSON(commit)}`);
             console.log(`_______________________________________________________`)
         });
 
