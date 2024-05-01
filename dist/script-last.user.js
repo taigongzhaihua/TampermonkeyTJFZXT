@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         体检系统辅助
 // @namespace    http://tampermonkey.net/
-// @version      0.1.21
+// @version      0.1.22
 // @description  监控特定元素属性的变化，并根据变化执行相应的操作。
 // @author       太公摘花
 // @match        https://wx.changx.com/*
@@ -100,24 +100,21 @@
      * @param {Function} action - 当属性变化符合条件时执行的操作
      * @returns {MutationObserver|null} 返回创建的MutationObserver对象或null
      */
-    async function setupElementObserver(selector, attribute, value, action) {
-        if (typeof selector !== 'string' || selector.length === 0) {
-            throw new Error('选择器参数必须是一个非空字符串。');
-        }
-
-        const element = await waitForElement(selector);
-        if (element.attr(attribute) === value) {
-            action();
-        }
-
-        return setupObserver(selector, {
-            attributes: true,
-            attributeFilter: [attribute]
-        }, (element) => {
+    function setupElementObserver(selector, attribute, value, action) {
+        return waitForElement(selector).then((element) => {
             if (element.attr(attribute) === value) {
                 action();
             }
+            return setupObserver(selector, {
+                attributes: true,
+                attributeFilter: [attribute]
+            }, (element) => {
+                if (element.attr(attribute) === value) {
+                    action();
+                }
+            });
         });
+
     }
 
     /**
@@ -133,14 +130,15 @@
             "尿潜血",
             "白细胞"
         ];
-
-        for (let item of urinalysisItems) {
-            try {
-                let result = await selectDropdownOption(item, "-");
-                console.log(`成功选择 ${item}: ${result}`);
-            } catch (error) {
-                console.error(`在选择 ${item} 时发生错误: ${error.message}`);
-            }
+        for (let i = 0; i < urinalysisItems.length; i++) {
+            // 等待每次下拉选项选择完成后再进行下一次选择
+            await selectDropdownOption(urinalysisItems[i], "-")
+                .then(result => {
+                    console.log(`成功选择 ${urinalysisItems[i]}: ${result}`);
+                })
+                .catch(error => {
+                    console.error(`在选择 ${urinalysisItems[i]} 时发生错误: ${error.message}`);
+                });
         }
     }
 
