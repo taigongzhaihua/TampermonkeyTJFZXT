@@ -19,11 +19,8 @@ async function fetchCommits() {
 
         console.log('Commits in the push:');
         response.data.forEach(commit => {
-            console.log(`Commit SHA: ${commit.sha}`);
-            console.log(`Author: ${commit.commit.author.name}`);
-            console.log(`Message: ${commit.commit.message}`);
-            console.log(`URL: ${commit.html_url}`);
-            console.log('---');
+            console.log(`commit: ${commit}`)
+            console.log(`_______________________________________________________`)
         });
 
     } catch (error) {
