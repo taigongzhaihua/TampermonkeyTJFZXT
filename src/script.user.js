@@ -129,7 +129,12 @@
             "尿潜血",
             "白细胞"
         ];
-        setTimeout(selectDropdownOption(performTab0Actions[1],"-"), 500);
+        setTimeout(selectDropdownOption(performTab0Actions[0],"-"), 500).Promise(
+            selectDropdownOption(performTab0Actions[1],"-"),
+            selectDropdownOption(performTab0Actions[2],"-"),
+            selectDropdownOption(performTab0Actions[3],"-"),
+            selectDropdownOption(performTab0Actions[4],"-")
+        );
     }
 
     /**

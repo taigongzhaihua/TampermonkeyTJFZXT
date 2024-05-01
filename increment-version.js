@@ -2,8 +2,35 @@ import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 import moment from 'moment'
-import { get } from 'http';
+import axios from 'axios';
 
+async function fetchCommits() {
+    const repo = process.env.GITHUB_REPOSITORY; // 例如 'username/repo'
+    const sha = process.env.GITHUB_SHA; // 当前推送的最后一次提交 SHA
+
+    try {
+        const response = await axios.get(`https://api.github.com/repos/${repo}/commits?sha=${sha}`, {
+            headers: {
+                'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+
+        console.log('Commits in the push:');
+        response.data.forEach(commit => {
+            console.log(`Commit SHA: ${commit.sha}`);
+            console.log(`Author: ${commit.commit.author.name}`);
+            console.log(`Message: ${commit.commit.message}`);
+            console.log(`URL: ${commit.html_url}`);
+            console.log('---');
+        });
+
+    } catch (error) {
+        console.error('Error fetching commit data:', error);
+    }
+}
+
+fetchCommits();
 // 定义文件路径
 const scriptPath = path.join(process.cwd(), 'src', 'script.user.js');
 const packagePath = path.join(process.cwd(), 'package.json');
