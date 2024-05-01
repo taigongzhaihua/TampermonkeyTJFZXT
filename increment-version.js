@@ -3,6 +3,7 @@ import path from 'path';
 import { execSync } from 'child_process';
 import moment from 'moment'
 import axios from 'axios';
+import { get } from 'http';
 
 async function fetchCommits() {
     const repo = process.env.GITHUB_REPOSITORY; // 例如 'username/repo'
@@ -42,15 +43,15 @@ function getLastCommit() {
     try {
         const lastCommit = execSync(`git log -n 1 --name-only`).toString();
         let match = lastCommit.match(/commit\s(\w+)\nAuthor:\s*(.*?)\s<(.*?)>\nDate:\s*(.*?)\n\n\s*(.*?)\n\n((.*\n)+)/);
-        const [,CommitHash, Author, Email, date, Aessage, files,] = match;
+        const [, CommitHash, Author, Email, date, Message, files,] = match;
         let Files = files.split('\n').filter(file => file !== '');
-        let Date=moment(date, 'ddd MMM DD HH:mm:ss YYYY Z').format('YYYY-MM-DD HH:mm:ss ZZ');
+        let Date = moment(date, 'ddd MMM DD HH:mm:ss YYYY Z').format('YYYY-MM-DD HH:mm:ss ZZ');
         let commit = {
             CommitHash,
             Author,
             Email,
             Date,
-            Aessage,
+            Message,
             Files,
         };
         return commit;
