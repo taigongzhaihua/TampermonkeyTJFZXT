@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         体检系统辅助
 // @namespace    http://tampermonkey.net/
-// @version      0.1.25
+// @version      0.1.26
 // @description  监控特定元素属性的变化，并根据变化执行相应的操作。
 // @author       太公摘花
 // @match        https://wx.changx.com/*
@@ -87,20 +87,15 @@
      * ...
      */
     function setupElementObserver(selector, attribute, value, action) {
-        return waitForElement(selector).then((element) => {
-            if (element.attr(attribute) === value) {
-                action();
-            }
-            return setupObserver(selector, {
-                attributes: true,
-                attributeFilter: [attribute]
-            }, (element) => {
-                if (element.attr(attribute) === value) {
-                    action();
-                }
-            });
-        });
+        const checkAndAct = element => {
+            element.attr(attribute) === value && action();
+        }
 
+        const config = { attributes: true, attributeFilter: [attribute] };
+
+        return waitFor(selector)
+            .then(checkAndAct)
+            .then(() => setupObserver(selector, config, checkAndAct));
     }
 
     /**
