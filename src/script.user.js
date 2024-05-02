@@ -87,20 +87,15 @@
      * ...
      */
     function setupElementObserver(selector, attribute, value, action) {
-        return waitForElement(selector).then((element) => {
-            if (element.attr(attribute) === value) {
-                action();
-            }
-            return setupObserver(selector, {
-                attributes: true,
-                attributeFilter: [attribute]
-            }, (element) => {
-                if (element.attr(attribute) === value) {
-                    action();
-                }
-            });
-        });
+        const checkAndAct = element => {
+            element.attr(attribute) === value && action();
+        }
 
+        const config = { attributes: true, attributeFilter: [attribute] };
+
+        return waitFor(selector)
+            .then(checkAndAct)
+            .then(() => setupObserver(selector, config, checkAndAct));
     }
 
     /**
