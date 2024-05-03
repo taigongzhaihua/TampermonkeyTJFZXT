@@ -87,16 +87,21 @@
      * ...
      */
     function setupElementObserver(selector, attribute, value, action) {
-        const checkAndAct = element => {
-            element.attr(attribute) === value && action();
-        }
-
+        const checkAndAct = ($element) => {
+            if ($element.attr(attribute) === value) {
+                action();
+            }
+        };
+    
         const config = { attributes: true, attributeFilter: [attribute] };
-
+    
         return waitFor(selector)
-            .then(checkAndAct)
-            .then(() => setupObserver(selector, config, checkAndAct));
+            .then($element => {
+                checkAndAct($element);  // Ensure the element meets the criteria on initial check
+                return setupObserver(selector, config, checkAndAct);  // Continue to observe the element
+            });
     }
+    
 
     /**
      * 模拟指定标题的下拉框选择指定选项
