@@ -261,6 +261,7 @@
         tab0Observer = setupElementObserver('#tab-0', 'tabindex', 0, performTab0Actions);
         tab1Observer = setupElementObserver('#tab-1', 'tabindex', 0, performTab1Actions);
         tab2Observer = setupElementObserver('#tab-2', 'tabindex', 0, performTab2Actions);
+        console.log(tab0Observer, tab1Observer, tab2Observer);
     }
 
     /**
