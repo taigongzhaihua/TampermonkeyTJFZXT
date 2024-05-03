@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         体检系统辅助
 // @namespace    http://tampermonkey.net/
-// @version      0.1.27
+// @version      0.1.28
 // @description  监控特定元素属性的变化，并根据变化执行相应的操作。
 // @author       太公摘花
 // @match        https://wx.changx.com/*
@@ -261,6 +261,7 @@
         tab0Observer = setupElementObserver('#tab-0', 'tabindex', 0, performTab0Actions);
         tab1Observer = setupElementObserver('#tab-1', 'tabindex', 0, performTab1Actions);
         tab2Observer = setupElementObserver('#tab-2', 'tabindex', 0, performTab2Actions);
+        console.log(tab0Observer, tab1Observer, tab2Observer);
     }
 
     /**
