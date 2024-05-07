@@ -34,11 +34,13 @@
             const display = element.css('display');
             if (display !== 'none') {
                 console.log('对话框显示，启动标签页监控...');
-                addObservers(manager, actions);
+                if (manager.observers.length === 0) {
+                    addObservers(manager, actions);
+                }
                 manager.startAll();
             } else {
                 console.log('对话框隐藏，断开标签页监控...');
-                manager.stopAll();
+                manager.removeAll();
             }
         });
     }
@@ -424,6 +426,19 @@ class ObserverManager {
      */
     stopAll() {
         Object.values(this.observers).forEach(observer => observer.stop());
+    }
+
+    /**
+     * @summary 移除所有观察者
+     * 
+     * @returns {void} - 无返回值
+     * @example
+     * manager.removeAll();
+     * ...
+     */
+    removeAll() {
+        Object.values(this.observers).forEach(observer => observer.stop());
+        this.observers = {};
     }
 }
 const actions = {
