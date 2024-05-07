@@ -34,6 +34,7 @@
             const display = element.css('display');
             if (display !== 'none') {
                 console.log('对话框显示，启动标签页监控...');
+                addObservers(manager, actions);
                 manager.startAll();
             } else {
                 console.log('对话框隐藏，断开标签页监控...');
@@ -285,7 +286,9 @@ class ElementObserver {
     async start() {
         const $element = await DOMUtils.waitFor(this.selector);
         // 初始化时执行一次回调函数
-        this.#runAction($element);
+        if (!this.observer) {
+            this.#runAction($element);
+        }
         // 启动监控
         this.observer = await DOMUtils.setupObserver(this.selector, { attributes: true, attributeFilter: [this.attribute] }, this.#runAction.bind(this));
     }
@@ -457,8 +460,9 @@ const actions = {
 
 // 创建观察者管理器
 const manager = new ObserverManager();
-Object.keys(actions).forEach((key, index) => {
-    const observer = new ElementObserver(`#tab-${index}`, 'tabindex', 0, actions[key]);
-    manager.add(`tab${index}`, observer);
-});
-
+function addObservers(manager, actions) {
+    Object.keys(actions).forEach((key, index) => {
+        const observer = new ElementObserver(`#tab-${index}`, 'tabindex', 0, actions[key]);
+        manager.add(`tab${index}`, observer);
+    });
+}
