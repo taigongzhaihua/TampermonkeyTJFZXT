@@ -171,15 +171,15 @@ class DOMUtils {
      * @see {@link https://api.jquery.com/jQuery/}
      */
     static waitFor(
-        selector, 
-        condition = () => true, 
-        timeout = 30000, 
-        interval = 100, 
+        selector,
+        condition = () => true,
+        timeout = 30000,
+        interval = 100,
         callbackIfTimeout = () => { throw new Error('等待条件满足超时。'); }
     ) {
         return new Promise((resolve, reject) => {
             const startTime = Date.now();
-            
+
             function checkCondition() {
                 let $element = typeof selector === 'function' ? selector() : $(selector);
                 if (!($element instanceof jQuery)) {
@@ -204,7 +204,7 @@ class DOMUtils {
                     setTimeout(checkCondition, interval);
                 }
             }
-            
+
             checkCondition();
         });
     }
@@ -226,16 +226,19 @@ class DOMUtils {
      */
     static setupObserver(selector, config, callback) {
         return new Promise((resolve, reject) => {
-            const element = $(selector)[0];
-            if (element) {
-                const observer = new MutationObserver(mutations => {
-                    mutations.forEach(mutation => callback($(mutation.target)));
-                });
-                observer.observe(element, config);
-                resolve(observer);
-            } else {
-                setTimeout(() => DOMUtils.setupObserver(selector, config, callback).then(resolve).catch(reject), 500);
+            function checkCondition() {
+                const element = $(selector)[0];
+                if (element) {
+                    const observer = new MutationObserver(mutations => {
+                        mutations.forEach(mutation => callback($(mutation.target)));
+                    });
+                    observer.observe(element, config);
+                    resolve(observer);
+                } else {
+                    setTimeout(checkCondition, 500);
+                }
             }
+            checkCondition();
         });
     }
 }
@@ -344,6 +347,9 @@ class ObserverManager {
      * ...
      */
     add(id, observer) {
+        if (this.observers[id]) {
+            this.remove(id);
+        }
         this.observers[id] = observer;
     }
 
