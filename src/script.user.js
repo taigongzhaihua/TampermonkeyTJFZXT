@@ -281,7 +281,9 @@ class ElementObserver {
      */
     async start() {
         const $element = await DOMUtils.waitFor(this.selector);
+        // 初始化时执行一次回调函数
         this.#runAction($element);
+        // 启动监控
         this.observer = await DOMUtils.setupObserver(this.selector, { attributes: true, attributeFilter: [this.attribute] }, this.#runAction.bind(this));
     }
 
