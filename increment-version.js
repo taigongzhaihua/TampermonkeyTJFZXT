@@ -47,6 +47,10 @@ function getCommitBySha(sha) {
     try {
         const commitText = execSync(`git show --name-only ${sha}`).toString();
         let match = commitText.match(/commit\s(\w+)\nAuthor:\s*(.*?)\s<(.*?)>\nDate:\s*(.*?)\n\n\s*(.*?)\n\n((.*\n)+)/);
+        if (!match) {
+            console.error('未找到匹配项:', commitText);
+            return {};
+        }
         const [, SHA, Author, Email, date, Message, files,] = match;
         let Files = files.split('\n').filter(file => file !== '');
         let Date = moment(date, 'ddd MMM DD HH:mm:ss YYYY Z').format('YYYY-MM-DD HH:mm:ss ZZ');
@@ -94,7 +98,13 @@ function hasScriptChanged(path) {
     try {
         return getCommitsAtLastPush().then(commits => {
             let changedFiles = [];
+            if (commits.length === 0) {
+                return false;
+            }
             commits.forEach(commit => {
+                if (!commit.Files) {
+                    return false;
+                }
                 commit.Files.forEach(file => {
                     if (!changedFiles.includes(file)) {
                         changedFiles.push(file);
