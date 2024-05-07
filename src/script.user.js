@@ -88,7 +88,7 @@ class DOMUtils {
             const placementDiv = await this.waitFor(
                 'div[x-placement="bottom-start"], div[x-placement="top-start"]',
                 () => true,
-                2000,
+                5000,
                 100,
                 () => {
                     console.log(`"${title}" 下拉菜单未出现，重新尝试打开。`);
