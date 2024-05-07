@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         体检系统辅助
 // @namespace    http://tampermonkey.net/
-// @version      0.1.30
+// @version      0.1.31
 // @description  监控特定元素属性的变化，并根据变化执行相应的操作。
 // @author       太公摘花
 // @match        https://wx.changx.com/*
@@ -88,7 +88,7 @@ class DOMUtils {
             const placementDiv = await this.waitFor(
                 'div[x-placement="bottom-start"], div[x-placement="top-start"]',
                 () => true,
-                2000,
+                5000,
                 100,
                 () => {
                     console.log(`"${title}" 下拉菜单未出现，重新尝试打开。`);
@@ -281,7 +281,9 @@ class ElementObserver {
      */
     async start() {
         const $element = await DOMUtils.waitFor(this.selector);
+        // 初始化时执行一次回调函数
         this.#runAction($element);
+        // 启动监控
         this.observer = await DOMUtils.setupObserver(this.selector, { attributes: true, attributeFilter: [this.attribute] }, this.#runAction.bind(this));
     }
 
