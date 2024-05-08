@@ -14,7 +14,6 @@
 (function () {
     'use strict';
 
-
     /**
      * @summary 监控对话框的显示与隐藏状态
      * 

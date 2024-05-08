@@ -1,14 +1,14 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import JavaScriptObfuscator from 'javascript-obfuscator';
 
-// 获取当前文件的目录名
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const updateUrl = "https://raw.githubusercontent.com/taigongzhaihua/TampermonkeyTJFZXT/main/dist/script-last.meta.js";
 const downloadUrl = "https://raw.githubusercontent.com/taigongzhaihua/TampermonkeyTJFZXT/main/dist/script-last.user.js";
 
 /**
- * 读取package.json文件获取当前项目的版本号
+ * 读取 package.json 文件获取当前项目的版本号
  * @returns {Promise<string>} 返回解析的版本号
  */
 async function getPackageJsonVersion() {
@@ -20,7 +20,7 @@ async function getPackageJsonVersion() {
 /**
  * 读取脚本文件获取其中定义的版本号
  * @param {string} filePath - 文件路径
- * @returns {Promise<string|null>} 返回找到的版本号或null（如果无法读取或解析）
+ * @returns {Promise<string|null>} 返回找到的版本号或 null（如果无法读取或解析）
  */
 async function getCurrentScriptVersion(filePath) {
     try {
@@ -63,9 +63,27 @@ async function main() {
         // 更新脚本到新版本
         const srcPath = path.join(__dirname, 'src', 'script.user.js');
         const scriptContent = await fs.promises.readFile(srcPath, 'utf8');
-        const updatedScript = scriptContent.replace(/AUTO_INCREMENTED_VERSION/g, packageVersion)
-            .replace(/AUTO_UPDATE_URL/g, updateUrl)
-            .replace(/AUTO_DOWNLOAD_URL/g, downloadUrl);
+
+        // 提取元数据部分
+        const metadataMatch = scriptContent.match(/\/\/\s*==UserScript==[\s\S]+?\/\/\s*==\/UserScript==/);
+        const metadata = metadataMatch ? metadataMatch[0] : '';
+        const body = scriptContent.replace(metadata, '');
+
+        // 混淆脚本正文
+        const obfuscationResult = JavaScriptObfuscator.obfuscate(body, {
+            "compact": true,                  // 将代码压缩为一行
+            "identifierNamesGenerator": "hexadecimal", // 将标识符重命名为十六进制形式
+            "renameGlobals": false,           // 不重命名全局标识符
+            "stringArray": true,              // 启用字符串数组
+            "stringArrayEncoding": ["base64"], // 使用 Base64 编码字符串数组
+            "stringArrayThreshold": 0.75,     // 75% 的字符串会替换成数组形式
+            "stringArrayRotate": true,        // 允许在不同位置使用不同字符串
+            "stringArrayWrappersCount": 1,    // 字符串数组包装器的数量
+            "stringArrayWrappersChainedCalls": true // 启用链式包装器
+        });
+
+        // 重新组合混淆后的代码和元数据
+        const updatedScript = `${metadata.replace(/AUTO_INCREMENTED_VERSION/g, packageVersion).replace(/AUTO_UPDATE_URL/g, updateUrl).replace(/AUTO_DOWNLOAD_URL/g, downloadUrl)}\n${obfuscationResult.getObfuscatedCode()}`;
         await fs.promises.writeFile(distPath, updatedScript);
 
         const metaPath = path.join(__dirname, 'dist', 'script-last.meta.js');
