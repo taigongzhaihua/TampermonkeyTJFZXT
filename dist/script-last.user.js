@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         体检系统辅助
 // @namespace    http://tampermonkey.net/
-// @version      0.1.34
+// @version      0.2.1
 // @description  监控特定元素属性的变化，并根据变化执行相应的操作。
 // @author       太公摘花
 // @match        https://wx.changx.com/*
@@ -24,29 +24,31 @@
      * monitorDialog('.el-dialog__wrapper.page-dialog.all-test-dialog');
      * ...
      */
-    function monitorDialog(selector) {
+    async function monitorDialog(selector) {
+        const element = await DOMUtils.waitFor(selector);
         const observerConfig = {
             attributes: true,
             attributeFilter: ['style'] // 只监控style属性
         };
 
-        DOMUtils.setupObserver(selector, observerConfig, (element) => {
+        const monitor = DOMUtils.creatObserver((element) => {
             const display = element.css('display');
             if (display !== 'none') {
-                console.log('对话框显示，启动标签页监控...');
-                if (manager.observers.length === 0) {
-                    addObservers(manager, actions);
-                }
-                manager.startAll();
+                console.log('对话框显示，3秒后启动标签页监控...');
+                setTimeout(() => {
+                    manager.startAll();
+                }, 3000);
             } else {
                 console.log('对话框隐藏，断开标签页监控...');
-                manager.removeAll();
+                manager.stopAll();
             }
         });
+        monitor.observe(element[0], observerConfig);
     }
 
     // 监控对话框的显示与隐藏状态
     $(document).ready(() => {
+        addObservers(manager, actions);
         monitorDialog('.el-dialog__wrapper.page-dialog.all-test-dialog');
     });
 
@@ -80,8 +82,10 @@ class DOMUtils {
                 return $.trim($(this).text().replaceAll(" ", "").replaceAll("+", "").replaceAll("-", "")) === title;
             }));
 
-            if (labelDiv.length === 0 || labelDiv.find('input').val() !== '') {
-                return { success: false, message: `未找到未选值的标题为"${title}"的下拉框。` };
+            if (labelDiv.length === 0) {
+                return { success: false, message: `未找到"${title}"下拉框。` };
+            } else if (labelDiv.find('input').val() !== '') {
+                return { success: false, message: `"${title}"下拉框已选值。` };
             }
 
             console.log(`找到未选值的下拉框，触发 "${title}" 下拉菜单。`);
@@ -227,25 +231,13 @@ class DOMUtils {
      * ...
      * @see {@link https://developer.mozilla.org/zh-CN/docs/Web/API/MutationObserver}
      */
-    static setupObserver(selector, config, callback) {
-        return new Promise((resolve, reject) => {
-            function checkCondition() {
-                const element = $(selector)[0];
-                if (element) {
-                    const observer = new MutationObserver(mutations => {
-                        mutations.forEach(mutation => callback($(mutation.target)));
-                    });
-                    observer.observe(element, config);
-                    resolve(observer);
-                } else {
-                    setTimeout(checkCondition, 500);
-                }
-            }
-            checkCondition();
+    static creatObserver(callback) {
+        const observer = new MutationObserver(mutations => {
+            mutations.forEach(mutation => callback($(mutation.target)));
         });
+        return observer;
     }
 }
-
 
 /**
  * @summary 监控特定元素属性的变化，并根据变化执行相应的操作。
@@ -288,11 +280,18 @@ class ElementObserver {
     async start() {
         const $element = await DOMUtils.waitFor(this.selector);
         // 初始化时执行一次回调函数
+        this.#runAction($element);
         if (!this.observer) {
-            this.#runAction($element);
+            this.observer = DOMUtils.creatObserver(this.#runAction.bind(this));
         }
-        // 启动监控
-        this.observer = await DOMUtils.setupObserver(this.selector, { attributes: true, attributeFilter: [this.attribute] }, this.#runAction.bind(this));
+        this.observer.observe(
+            $element[0],
+            {
+                attributes: true,
+                attributeFilter: [this.attribute]
+            }
+        );
+        console.log('监控已启动。');
     }
 
     /**
@@ -307,10 +306,27 @@ class ElementObserver {
     stop() {
         if (this.observer) {
             this.observer.disconnect();
-            this.observer = null;
+        } else {
+            console.warn('监控未定义，无需停止。');
         }
     }
 
+    /**
+     * @summary 重置监控
+     * 
+     * @returns {void} - 无返回值
+     * @example
+     * observer.reset();
+     * ...
+     */
+    reset() {
+        this.stop();
+        this.observer = null;
+        this.selector = null;
+        this.attribute = null;
+        this.value = null;
+        this.action = null;
+    }
     /**
      * @summary 执行回调函数
      * 
@@ -329,118 +345,75 @@ class ElementObserver {
 }
 
 class ObserverManager {
-
     /**
-     * @summary 创建一个ObserverManager实例
-     * 
-     * @example
-     * const manager = new ObserverManager();
-     * ...
+     * 创建一个 ObserverManager 实例
      */
     constructor() {
-        this.observers = {};
+        this.observers = new Map();
     }
 
     /**
-     * @summary 添加一个观察者
-     * 
-     * @param {string} id - 观察者的ID
-     * @param {ElementObserver} observer - ElementObserver实例
-     * @returns {void} - 无返回值
-     * @example
-     * manager.add('tab0', observer);
-     * ...
+     * 添加一个观察者
      */
     add(id, observer) {
-        if (this.observers[id]) {
-            this.remove(id);
+        if (this.observers.has(id)) {
+            console.warn(`已存在 ID 为 ${id} 的观察者, 请勿重复添加。`);
+        } else {
+            this.observers.set(id, observer);
         }
-        this.observers[id] = observer;
     }
 
     /**
-     * @summary 移除一个观察者
-     * 
-     * @param {string} id - 观察者的ID
-     * @returns {void} - 无返回值
-     * @example
-     * manager.remove('tab0');
-     * ...
+     * 移除一个观察者
      */
     remove(id) {
-        if (this.observers[id]) {
-            this.observers[id].stop();
-            delete this.observers[id];
+        if (this.observers.has(id)) {
+            this.observers.get(id).reset();
+            this.observers.delete(id);
         }
     }
 
     /**
-     * @summary 启动指定观察者
-     * 
-     * @param {string} id - 观察者的ID
-     * @returns {void} - 无返回值
-     * @example
-     * manager.start('tab0');
-     * ...
+     * 启动指定观察者
      */
     start(id) {
-        if (this.observers[id]) {
-            this.observers[id].start();
+        if (this.observers.has(id)) {
+            this.observers.get(id).start();
         }
     }
 
     /**
-     * @summary 停止指定观察者
-     * 
-     * @param {string} id - 观察者的ID
-     * @returns {void} - 无返回值
-     * @example
-     * manager.stop('tab0');
-     * ...
+     * 停止指定观察者
      */
     stop(id) {
-        if (this.observers[id]) {
-            this.observers[id].stop();
+        if (this.observers.has(id)) {
+            this.observers.get(id).stop();
         }
     }
 
     /**
-     * @summary 启动所有观察者
-     * 
-     * @returns {void} - 无返回值
-     * @example
-     * manager.startAll();
-     * ...
+     * 启动所有观察者
      */
     startAll() {
-        Object.values(this.observers).forEach(observer => observer.start());
+        this.observers.forEach(observer => observer.start());
     }
 
     /**
-     * @summary 停止所有观察者
-     * 
-     * @returns {void} - 无返回值
-     * @example
-     * manager.stopAll();
-     * ...
+     * 停止所有观察者
      */
     stopAll() {
-        Object.values(this.observers).forEach(observer => observer.stop());
+        this.observers.forEach(observer => observer.stop());
     }
 
     /**
-     * @summary 移除所有观察者
-     * 
-     * @returns {void} - 无返回值
-     * @example
-     * manager.removeAll();
-     * ...
+     * 移除所有观察者
      */
     removeAll() {
-        Object.values(this.observers).forEach(observer => observer.stop());
-        this.observers = {};
+        this.observers.forEach(observer => observer.stop());
+        this.observers.clear();  // 使用 Map 的 clear 方法清空所有键值对
     }
 }
+
 const actions = {
     // 标签页 0 的操作
     performTab0Actions: async () => {
@@ -452,9 +425,8 @@ const actions = {
                 if (result.success) {
                     console.log(`"${item}"选值成功：${result.message}`);
                 } else {
-                    console.log(`"${item}"未能成功选值：${result.message}`);
+                    console.log(`"${item}"选值失败：${result.message}`);
                 }
-
             } catch (error) {
                 console.error(`在选择 ${item} 时发生错误: ${error.message}`);
             }
