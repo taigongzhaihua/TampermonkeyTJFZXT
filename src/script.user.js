@@ -4,6 +4,7 @@
 // @version      AUTO_INCREMENTED_VERSION
 // @description  监控特定元素属性的变化，并根据变化执行相应的操作。
 // @author       太公摘花
+// @icon         https://wx.changx.com/favicon.ico
 // @match        https://wx.changx.com/*
 // @grant        none
 // @require      https://code.jquery.com/jquery-3.7.1.js
