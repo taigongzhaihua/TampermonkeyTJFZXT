@@ -14,40 +14,9 @@
 (function () {
     'use strict';
 
-    /**
-     * @summary 监控对话框的显示与隐藏状态
-     * 
-     * @param {string} selector - jQuery选择器，用于定位需要监控的元素
-     * @returns {void} - 无返回值
-     * @example
-     * monitorDialog('.el-dialog__wrapper.page-dialog.all-test-dialog');
-     * ...
-     */
-    async function monitorDialog(selector) {
-        const element = await DOMUtils.waitFor(selector);
-        const observerConfig = {
-            attributes: true,
-            attributeFilter: ['style'] // 只监控style属性
-        };
-
-        const monitor = DOMUtils.creatObserver((element) => {
-            const display = element.css('display');
-            if (display !== 'none') {
-                console.log('对话框显示，3秒后启动标签页监控...');
-                setTimeout(() => {
-                    manager.startAll();
-                }, 3000);
-            } else {
-                console.log('对话框隐藏，断开标签页监控...');
-                manager.stopAll();
-            }
-        });
-        monitor.observe(element[0], observerConfig);
-    }
-
     // 监控对话框的显示与隐藏状态
     $(document).ready(() => {
-        addObservers(manager, actions);
+        addObservers(tabsManager, actions);
         monitorDialog('.el-dialog__wrapper.page-dialog.all-test-dialog');
     });
 
@@ -181,7 +150,7 @@ class DOMUtils {
         condition = () => true,
         timeout = 30000,
         interval = 100,
-        callbackIfTimeout = () => { throw new Error('等待条件满足超时。'); }
+        callbackIfTimeout = () => { throw new Error('等待超时。'); }
     ) {
         return new Promise((resolve, reject) => {
             const startTime = Date.now();
@@ -189,10 +158,10 @@ class DOMUtils {
             function checkCondition() {
                 let $element = typeof selector === 'function' ? selector() : $(selector);
                 if (!($element instanceof jQuery)) {
-                    return reject(new Error("选择器或函数没有返回一个 jQuery 对象。"));
+                    return reject(new Error(`"selector" 参数无法获取一个正确的 jQuery 对象，请检查参数。`));
                 }
 
-                // 满足条件或超时
+                // 检查条件是否满足
                 if ($element.length > 0 && condition($element)) {
                     resolve($element);
                 } else if (Date.now() - startTime > timeout) {
@@ -201,7 +170,7 @@ class DOMUtils {
                         if (result instanceof Promise) {
                             result.then(resolve).catch(reject);
                         } else {
-                            reject(new Error('等待条件满足超时。'));
+                            reject(new Error('等待超时。'));
                         }
                     } catch (error) {
                         reject(error);
@@ -326,6 +295,7 @@ class ElementObserver {
         this.value = null;
         this.action = null;
     }
+
     /**
      * @summary 执行回调函数
      * 
@@ -344,6 +314,7 @@ class ElementObserver {
 }
 
 class ObserverManager {
+
     /**
      * 创建一个 ObserverManager 实例
      */
@@ -352,7 +323,14 @@ class ObserverManager {
     }
 
     /**
-     * 添加一个观察者
+     * @summary 添加一个观察者
+     * 
+     * @param {string} id - 观察者的 ID
+     * @param {ElementObserver} observer - ElementObserver 实例
+     * @returns {void} - 无返回值
+     * @example
+     * add('tab0', observer);
+     * ...
      */
     add(id, observer) {
         if (this.observers.has(id)) {
@@ -363,7 +341,13 @@ class ObserverManager {
     }
 
     /**
-     * 移除一个观察者
+     * @summary 移除一个观察者
+     * 
+     * @param {string} id - 观察者的 ID
+     * @returns {void} - 无返回值
+     * @example
+     * remove('tab0');
+     * ...
      */
     remove(id) {
         if (this.observers.has(id)) {
@@ -373,7 +357,13 @@ class ObserverManager {
     }
 
     /**
-     * 启动指定观察者
+     * @summary 启动指定观察者
+     * 
+     * @param {string} id - 观察者的 ID
+     * @returns {void} - 无返回值
+     * @example
+     * start('tab0');
+     * ...
      */
     start(id) {
         if (this.observers.has(id)) {
@@ -382,7 +372,13 @@ class ObserverManager {
     }
 
     /**
-     * 停止指定观察者
+     * @summary 停止指定观察者
+     * 
+     * @param {string} id - 观察者的 ID
+     * @returns {void} - 无返回值
+     * @example
+     * stop('tab0');
+     * ...
      */
     stop(id) {
         if (this.observers.has(id)) {
@@ -391,21 +387,36 @@ class ObserverManager {
     }
 
     /**
-     * 启动所有观察者
+     * @summary 启动所有观察者
+     * 
+     * @returns {void} - 无返回值
+     * @example
+     * startAll();
+     * ...
      */
     startAll() {
         this.observers.forEach(observer => observer.start());
     }
 
     /**
-     * 停止所有观察者
+     * @summary 停止所有观察者
+     * 
+     * @returns {void} - 无返回值
+     * @example
+     * stopAll();
+     * ...
      */
     stopAll() {
         this.observers.forEach(observer => observer.stop());
     }
 
     /**
-     * 移除所有观察者
+     * @summary 移除所有观察者
+     * 
+     * @returns {void} - 无返回值
+     * @example
+     * removeAll();
+     * ...
      */
     removeAll() {
         this.observers.forEach(observer => observer.stop());
@@ -413,11 +424,14 @@ class ObserverManager {
     }
 }
 
+// 定义标签页操作
 const actions = {
+
     // 标签页 0 的操作
     performTab0Actions: async () => {
         let urinalysisItems = ["尿蛋白", "尿糖", "尿酮体", "尿潜血", "白细胞"];
 
+        // 逐个选择下拉框选项
         for (let item of urinalysisItems) {
             try {
                 let result = await DOMUtils.selectDropdownOption(item, "-");
@@ -431,12 +445,14 @@ const actions = {
             }
         }
     },
+
     // 标签页 1 的操作
     performTab1Actions: () => {
         console.log('标签页 1 激活，执行操作...');
         DOMUtils.simulateClick('div#pane-1 input[type="radio"][value="1"]');
         DOMUtils.clickUncheckedLabel($('div#pane-1 input[type="radio"][value="4"]').first().closest('label'));
     },
+
     // 标签页 2 的操作
     performTab2Actions: () => {
         console.log('标签页 2 激活，执行操作...');
@@ -445,10 +461,52 @@ const actions = {
 };
 
 // 创建观察者管理器
-const manager = new ObserverManager();
+const tabsManager = new ObserverManager();
+
+/**
+ * @summary 添加观察者
+ * 
+ * @param {ObserverManager} manager - 观察者管理器
+ * @param {Object} actions - 操作对象
+ * @returns {void} - 无返回值
+ * @example
+ * addObservers(tabsManager, actions);
+ * ...
+ */
 function addObservers(manager, actions) {
     Object.keys(actions).forEach((key, index) => {
         const observer = new ElementObserver(`#tab-${index}`, 'tabindex', 0, actions[key]);
         manager.add(`tab${index}`, observer);
     });
+}
+
+/**
+ * @summary 监控对话框的显示与隐藏状态
+ * 
+ * @param {string} selector - jQuery选择器，用于定位需要监控的元素
+ * @returns {void} - 无返回值
+ * @example
+ * monitorDialog('.el-dialog__wrapper.page-dialog.all-test-dialog');
+ * ...
+ */
+async function monitorDialog(selector) {
+    const element = await DOMUtils.waitFor(selector);
+    const observerConfig = {
+        attributes: true,
+        attributeFilter: ['style'] // 只监控style属性
+    };
+
+    const monitor = DOMUtils.creatObserver((element) => {
+        const display = element.css('display');
+        if (display !== 'none') {
+            console.log('对话框显示，3秒后启动标签页监控...');
+            setTimeout(() => {
+                tabsManager.startAll();
+            }, 3000);
+        } else {
+            console.log('对话框隐藏，断开标签页监控...');
+            tabsManager.stopAll();
+        }
+    });
+    monitor.observe(element[0], observerConfig);
 }
